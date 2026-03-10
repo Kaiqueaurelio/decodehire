@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface UserPlanInfo {
   planName: string;
-  planType: "free" | "pro" | "business";
+  planType: "free" | "starter" | "pro" | "business";
   dailyLimit: number | null; // null = unlimited
   dailyUsage: number;
   canAnalyze: boolean;
