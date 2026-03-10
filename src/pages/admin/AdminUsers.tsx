@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, ShieldCheck, ShieldOff } from "lucide-react";
+import { Users, ShieldCheck, ShieldOff, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -25,22 +27,42 @@ export default function AdminUsers() {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [analysisCounts, setAnalysisCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const fetchData = async () => {
-    const [usersRes, rolesRes] = await Promise.all([
+    const [usersRes, rolesRes, analysesRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
+      supabase.from("analysis_results").select("user_id"),
     ]);
     setUsers(usersRes.data || []);
     setRoles(rolesRes.data || []);
+
+    // Count analyses per user
+    const counts: Record<string, number> = {};
+    (analysesRes.data || []).forEach((a) => {
+      counts[a.user_id] = (counts[a.user_id] || 0) + 1;
+    });
+    setAnalysisCounts(counts);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredUsers = useMemo(() => {
+    if (!search.trim()) return users;
+    const q = search.toLowerCase();
+    return users.filter(
+      (u) =>
+        (u.full_name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q)
+    );
+  }, [users, search]);
 
   const getUserRoles = (userId: string) =>
     roles.filter((r) => r.user_id === userId).map((r) => r.role);
@@ -56,17 +78,11 @@ export default function AdminUsers() {
     setToggling(userId);
     try {
       if (currentlyAdmin) {
-        const { error } = await supabase
-          .from("user_roles")
-          .delete()
-          .eq("user_id", userId)
-          .eq("role", "admin");
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
         if (error) throw error;
         toast.success("Permissão de admin removida.");
       } else {
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role: "admin" } as any);
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" } as any);
         if (error) throw error;
         toast.success("Usuário promovido a admin.");
       }
@@ -87,16 +103,33 @@ export default function AdminUsers() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-display">
-            <Users className="w-5 h-5 text-primary" />
-            Usuários ({users.length})
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="flex items-center gap-2 font-display">
+              <Users className="w-5 h-5 text-primary" />
+              Usuários ({users.length})
+            </CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-center py-8 text-muted-foreground">Carregando...</p>
-          ) : users.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">Nenhum usuário cadastrado</p>
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              {search ? "Nenhum resultado encontrado" : "Nenhum usuário cadastrado"}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -104,19 +137,23 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Análises</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Cadastro</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((u) => {
+                  {filteredUsers.map((u) => {
                     const admin = isUserAdmin(u.user_id);
                     const isSelf = u.user_id === user?.id;
                     return (
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                         <TableCell className="text-sm">{u.email || "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{analysisCounts[u.user_id] || 0}</Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
                             {getUserRoles(u.user_id).map((role) => (
@@ -137,9 +174,9 @@ export default function AdminUsers() {
                             onClick={() => toggleAdmin(u.user_id, admin)}
                           >
                             {admin ? (
-                              <><ShieldOff className="w-4 h-4 mr-1" /> Remover Admin</>
+                              <><ShieldOff className="w-4 h-4 mr-1" /> Remover</>
                             ) : (
-                              <><ShieldCheck className="w-4 h-4 mr-1" /> Promover Admin</>
+                              <><ShieldCheck className="w-4 h-4 mr-1" /> Promover</>
                             )}
                           </Button>
                         </TableCell>

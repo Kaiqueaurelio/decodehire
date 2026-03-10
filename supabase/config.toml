@@ -1,9 +1,6 @@
 project_id = "mqphckhskkqzyabycysv"
 
-[functions.extract-text]
-verify_jwt = false
-
-[functions.parse-resume]
+[functions.process-resume]
 verify_jwt = false
 
 [functions.analyze-resume]
