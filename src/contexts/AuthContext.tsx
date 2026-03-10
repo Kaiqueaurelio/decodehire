@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const authEventFired = useRef(false);
 
   const checkAdmin = async (userId: string) => {
     const { data } = await supabase
@@ -33,13 +34,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Check if URL contains OAuth callback tokens
+    const hasOAuthCallback = window.location.hash?.includes("access_token") ||
+      window.location.search?.includes("code=");
+
+    // Set up auth state listener FIRST (primary source of truth)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event:", event);
+      console.log("Auth event:", event, "has session:", !!session);
+      authEventFired.current = true;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Use setTimeout to avoid potential Supabase client deadlock
         setTimeout(() => checkAdmin(session.user.id), 0);
       } else {
         setIsAdmin(false);
@@ -47,18 +52,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Then check for existing session
+    // Fallback: check existing session, but only finalize loading
+    // if there's no OAuth callback pending
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Only update if onAuthStateChange hasn't already fired
-      setSession(prev => prev ?? session);
-      setUser(prev => prev ?? session?.user ?? null);
+      // If onAuthStateChange already fired, skip
+      if (authEventFired.current) return;
+
+      // If there's an OAuth callback in the URL, wait for onAuthStateChange
+      if (hasOAuthCallback) {
+        console.log("OAuth callback detected, waiting for auth event...");
+        return;
+      }
+
+      setSession(session);
+      setUser(session?.user ?? null);
       if (session?.user) {
         checkAdmin(session.user.id);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Safety timeout: if nothing fires in 5s, stop loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn("Auth timeout - forcing loading to false");
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
