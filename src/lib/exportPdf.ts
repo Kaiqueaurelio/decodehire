@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface AnalysisResult {
   classificacao: string;
@@ -19,143 +20,105 @@ interface JobParameters {
   idiomas?: string;
 }
 
-export function exportAnalysisPdf(
-  result: AnalysisResult,
-  jobParams?: JobParameters,
-  date?: string
-) {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  const maxWidth = pageWidth - margin * 2;
-  let y = 20;
-
-  const checkPage = (needed: number) => {
-    if (y + needed > doc.internal.pageSize.getHeight() - 20) {
-      doc.addPage();
-      y = 20;
-    }
-  };
-
-  const addTitle = (text: string) => {
-    checkPage(14);
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text(text, margin, y);
-    y += 8;
-  };
-
-  const addBody = (text: string) => {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(60, 60, 60);
-    const lines = doc.splitTextToSize(text, maxWidth);
-    checkPage(lines.length * 5 + 4);
-    doc.text(lines, margin, y);
-    y += lines.length * 5 + 4;
-  };
-
-  const addBullets = (items: string[]) => {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(60, 60, 60);
-    items.forEach((item) => {
-      const lines = doc.splitTextToSize(`• ${item}`, maxWidth - 4);
-      checkPage(lines.length * 5 + 2);
-      doc.text(lines, margin + 4, y);
-      y += lines.length * 5 + 2;
-    });
-    y += 2;
-  };
-
-  // Header
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(20, 20, 20);
-  doc.text("Relatório de Análise de Currículo", margin, y);
-  y += 8;
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Gerado em: ${date || new Date().toLocaleDateString("pt-BR")}`, margin, y);
-  y += 10;
-
-  // Divider
-  doc.setDrawColor(200, 200, 200);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 10;
-
-  // Score section
+function buildHtml(result: AnalysisResult, jobParams?: JobParameters, date?: string): string {
   const isCompatible =
     result.classificacao?.toLowerCase().includes("compatível") &&
     !result.classificacao?.toLowerCase().includes("não");
 
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(isCompatible ? 34 : 185, isCompatible ? 139 : 28, isCompatible ? 34 : 28);
-  doc.text(`${result.classificacao}  —  ${result.score}/100`, margin, y);
-  y += 12;
+  const scoreColor = result.score >= 70 ? "#16a34a" : result.score >= 40 ? "#ca8a04" : "#dc2626";
+  const badgeColor = isCompatible ? "#16a34a" : "#dc2626";
+  const dateStr = date || new Date().toLocaleDateString("pt-BR");
 
-  // Job parameters
+  const section = (title: string, content: string) => `
+    <div style="margin-bottom:16px;">
+      <h3 style="font-size:14px;font-weight:700;color:#1a1a1a;margin:0 0 8px 0;padding-bottom:4px;border-bottom:1px solid #e5e5e5;">${title}</h3>
+      ${content}
+    </div>`;
+
+  const bullet = (items: string[], color = "#374151") =>
+    items.map(item => `<div style="font-size:12px;color:${color};margin:4px 0;padding-left:12px;">• ${item}</div>`).join("");
+
+  const text = (t: string) => `<p style="font-size:12px;color:#4b5563;line-height:1.6;margin:0;">${t}</p>`;
+
+  let jobSection = "";
   if (jobParams) {
-    addTitle("📋 Parâmetros da Vaga");
-    addBody(`Cargo: ${jobParams.cargo}`);
-    if (jobParams.descricao) addBody(`Descrição: ${jobParams.descricao}`);
-    if (jobParams.experienciaMinima) addBody(`Experiência mínima: ${jobParams.experienciaMinima} anos`);
-    if (jobParams.formacao) addBody(`Formação: ${jobParams.formacao}`);
-    if (jobParams.certificacoes) addBody(`Certificações: ${jobParams.certificacoes}`);
-    if (jobParams.idiomas) addBody(`Idiomas: ${jobParams.idiomas}`);
-    y += 4;
+    let details = `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Cargo:</strong> ${jobParams.cargo}</p>`;
+    if (jobParams.descricao) details += `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Descricao:</strong> ${jobParams.descricao}</p>`;
+    if (jobParams.experienciaMinima) details += `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Experiencia minima:</strong> ${jobParams.experienciaMinima} anos</p>`;
+    if (jobParams.formacao) details += `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Formacao:</strong> ${jobParams.formacao}</p>`;
+    if (jobParams.certificacoes) details += `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Certificacoes:</strong> ${jobParams.certificacoes}</p>`;
+    if (jobParams.idiomas) details += `<p style="font-size:12px;color:#4b5563;margin:2px 0;"><strong>Idiomas:</strong> ${jobParams.idiomas}</p>`;
+    jobSection = section("Parametros da Vaga", details);
   }
 
-  // Resumo
-  if (result.resumo) {
-    addTitle("👤 Resumo do Perfil");
-    addBody(result.resumo);
-    y += 4;
-  }
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;width:700px;padding:32px;background:#fff;color:#1a1a1a;">
+      <h1 style="font-size:22px;font-weight:800;margin:0 0 4px 0;color:#111;">Relatorio de Analise de Curriculo</h1>
+      <p style="font-size:11px;color:#999;margin:0 0 16px 0;">Gerado em: ${dateStr}</p>
+      <hr style="border:none;border-top:1px solid #ddd;margin:0 0 20px 0;">
 
-  // Habilidades
-  if (result.habilidades_compativeis?.length > 0) {
-    addTitle("✅ Habilidades Compatíveis");
-    addBullets(result.habilidades_compativeis);
-  }
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <span style="display:inline-block;padding:6px 16px;border-radius:6px;background:${badgeColor};color:#fff;font-size:13px;font-weight:700;">${result.classificacao}</span>
+        <span style="font-size:32px;font-weight:800;color:${scoreColor};">${result.score}<span style="font-size:16px;color:#999;">/100</span></span>
+      </div>
 
-  // Experiência
-  if (result.experiencia_relevante) {
-    addTitle("⭐ Experiência Relevante");
-    addBody(result.experiencia_relevante);
-    y += 4;
-  }
+      <div style="background:#f3f4f6;border-radius:8px;height:10px;margin-bottom:24px;overflow:hidden;">
+        <div style="height:100%;width:${result.score}%;background:${scoreColor};border-radius:8px;"></div>
+      </div>
 
-  // Diferenciais
-  if (result.diferenciais?.length > 0) {
-    addTitle("🌟 Diferenciais");
-    addBullets(result.diferenciais);
-  }
+      ${jobSection}
+      ${result.resumo ? section("Resumo do Perfil", text(result.resumo)) : ""}
+      ${result.habilidades_compativeis?.length > 0 ? section("Habilidades Compativeis", bullet(result.habilidades_compativeis, "#16a34a")) : ""}
+      ${result.experiencia_relevante ? section("Experiencia Relevante", text(result.experiencia_relevante)) : ""}
+      ${result.diferenciais?.length > 0 ? section("Diferenciais", bullet(result.diferenciais, "#2563eb")) : ""}
+      ${result.lacunas?.length > 0 ? section("Requisitos Ausentes", bullet(result.lacunas, "#dc2626")) : ""}
 
-  // Lacunas
-  if (result.lacunas?.length > 0) {
-    addTitle("❌ Requisitos Ausentes");
-    addBullets(result.lacunas);
-  }
+      <hr style="border:none;border-top:1px solid #eee;margin:24px 0 8px 0;">
+      <p style="font-size:9px;color:#bbb;text-align:center;margin:0;">DecodeHire — Relatorio gerado automaticamente</p>
+    </div>`;
+}
 
-  // Footer
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(160, 160, 160);
-    doc.text(
-      `DecodeHire — Página ${i} de ${totalPages}`,
-      pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
-      { align: "center" }
-    );
-  }
+export async function exportAnalysisPdf(
+  result: AnalysisResult,
+  jobParams?: JobParameters,
+  date?: string
+) {
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.left = "-9999px";
+  container.style.top = "0";
+  container.innerHTML = buildHtml(result, jobParams, date);
+  document.body.appendChild(container);
 
-  const cargo = jobParams?.cargo || "analise";
-  doc.save(`analise-${cargo.toLowerCase().replace(/\s+/g, "-")}.pdf`);
+  try {
+    const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const pageHeight = 277;
+
+    const doc = new jsPDF("p", "mm", "a4");
+    let heightLeft = imgHeight;
+    let position = 10;
+
+    doc.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 10;
+      doc.addPage();
+      doc.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const cargo = jobParams?.cargo || "analise";
+    doc.save(`analise-${cargo.toLowerCase().replace(/\s+/g, "-")}.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
 }
