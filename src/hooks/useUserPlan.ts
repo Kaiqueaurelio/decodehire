@@ -14,7 +14,7 @@ interface UserPlanInfo {
 }
 
 export function useUserPlan(): UserPlanInfo {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [planName, setPlanName] = useState("Gratuito");
   const [planType, setPlanType] = useState<"free" | "pro" | "business">("free");
   const [dailyLimit, setDailyLimit] = useState<number | null>(5);
@@ -27,8 +27,16 @@ export function useUserPlan(): UserPlanInfo {
       return;
     }
 
+    if (isAdmin) {
+      setPlanName("Administrador");
+      setPlanType("business");
+      setDailyLimit(null);
+      setDailyUsage(0);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Get active subscription
       const { data: sub } = await supabase
         .from("user_subscriptions")
         .select("plan_id, status")
@@ -51,7 +59,6 @@ export function useUserPlan(): UserPlanInfo {
           setDailyLimit(plan.daily_limit);
         }
       } else {
-        // Default free plan
         const { data: freePlan } = await supabase
           .from("subscription_plans")
           .select("name, daily_limit")
@@ -67,7 +74,6 @@ export function useUserPlan(): UserPlanInfo {
         setPlanType("free");
       }
 
-      // Get daily usage
       const { data: usageData } = await supabase.rpc("get_daily_usage", {
         _user_id: user.id,
       });
@@ -81,10 +87,10 @@ export function useUserPlan(): UserPlanInfo {
 
   useEffect(() => {
     fetchPlanInfo();
-  }, [user]);
+  }, [user, isAdmin]);
 
-  const canAnalyze = dailyLimit === null || dailyUsage < dailyLimit;
-  const canExport = planType === "pro" || planType === "business";
+  const canAnalyze = isAdmin || dailyLimit === null || dailyUsage < dailyLimit;
+  const canExport = isAdmin || planType === "pro" || planType === "business";
 
   return {
     planName,
