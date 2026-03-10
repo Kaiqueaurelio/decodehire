@@ -2,21 +2,13 @@ import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { FileText, BarChart3, CreditCard, Settings, LogOut, Shield, Menu, X, LayoutDashboard, Users, Package } from "lucide-react";
+import { FileText, BarChart3, CreditCard, LogOut, Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { to: "/dashboard", icon: FileText, label: "Análise" },
   { to: "/history", icon: BarChart3, label: "Histórico" },
   { to: "/plans", icon: CreditCard, label: "Planos" },
-];
-
-const adminItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Painel Admin" },
-  { to: "/admin/users", icon: Users, label: "Usuários" },
-  { to: "/admin/plans", icon: Package, label: "Planos" },
-  { to: "/admin/payments/review", icon: Shield, label: "Pagamentos" },
-  { to: "/admin/payments/pix", icon: Settings, label: "Config Pix" },
 ];
 
 export default function AppLayout() {
@@ -65,22 +57,21 @@ export default function AppLayout() {
 
           {isAdmin && (
             <>
-              <p className="text-xs uppercase tracking-wider text-sidebar-foreground/50 mt-6 mb-3 px-3">Admin</p>
-              {adminItems.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                    location.pathname === item.to
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              ))}
+              <div className="mt-6 mb-2 px-3">
+                <p className="text-xs uppercase tracking-wider text-sidebar-foreground/50 mb-3">Admin</p>
+              </div>
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  location.pathname.startsWith("/admin")
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                Painel Admin
+              </Link>
             </>
           )}
         </nav>
