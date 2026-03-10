@@ -47,6 +47,7 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   const { templates, loading: templatesLoading, saveTemplate, deleteTemplate } = useJobTemplates();
 
