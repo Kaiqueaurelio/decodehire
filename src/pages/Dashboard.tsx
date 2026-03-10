@@ -102,7 +102,7 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <AnalysisResults result={analysisResult} loading={analyzing} />
+          <AnalysisResults result={analysisResult} loading={analyzing} jobParams={jobParams} />
         </div>
       </div>
 

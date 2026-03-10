@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Star, BarChart3, Loader2, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Star, BarChart3, Loader2, User, Download } from "lucide-react";
+import { exportAnalysisPdf } from "@/lib/exportPdf";
 
 export interface AnalysisResult {
   classificacao: string;
@@ -16,9 +18,10 @@ export interface AnalysisResult {
 interface Props {
   result: AnalysisResult | null;
   loading: boolean;
+  jobParams?: any;
 }
 
-export function AnalysisResults({ result, loading }: Props) {
+export function AnalysisResults({ result, loading, jobParams }: Props) {
   if (loading) {
     return (
       <Card className="h-full flex items-center justify-center min-h-[400px]">
@@ -48,6 +51,19 @@ export function AnalysisResults({ result, loading }: Props) {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => exportAnalysisPdf(result, jobParams)}
+        >
+          <Download className="w-4 h-4" />
+          Exportar PDF
+        </Button>
+      </div>
+
       {/* Score Card */}
       <Card>
         <CardContent className="pt-6">

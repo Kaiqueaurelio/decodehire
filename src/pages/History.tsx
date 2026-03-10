@@ -5,8 +5,9 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Download, Lock } from "lucide-react";
+import { BarChart3, Download, Lock, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { exportAnalysisPdf } from "@/lib/exportPdf";
 
 interface HistoryItem {
   id: string;
@@ -74,7 +75,13 @@ export default function History() {
       return;
     }
     const jp = item.job_parameters as any;
-    exportToCsv([item], `analise-${jp?.cargo || "resultado"}.csv`);
+    const r = item.result as any;
+    exportAnalysisPdf(
+      r,
+      jp,
+      new Date(item.created_at).toLocaleDateString("pt-BR")
+    );
+    toast.success("PDF exportado!");
   };
 
   return (
@@ -131,18 +138,18 @@ export default function History() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleExportSingle(item)}
-                        title={canExport ? "Exportar CSV" : "Disponível no plano Pro"}
-                      >
-                        {canExport ? (
-                          <Download className="w-4 h-4" />
-                        ) : (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleExportSingle(item)}
+                          title={canExport ? "Exportar PDF" : "Disponível no plano Pro"}
+                        >
+                          {canExport ? (
+                            <FileText className="w-4 h-4" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       <Badge variant={isCompatible ? "default" : "destructive"}>
                         {r?.classificacao}
                       </Badge>
