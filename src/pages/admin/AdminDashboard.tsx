@@ -318,18 +318,18 @@ export default function AdminDashboard() {
       {/* Payment Status Summary */}
       {stats && (
         <div className="grid grid-cols-3 gap-3">
-          <Card className="border-green-500/20 bg-green-500/5">
+          <Card className="border-accent/20 bg-accent/5">
             <CardContent className="pt-4 pb-4 flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+              <CheckCircle className="w-5 h-5 text-accent shrink-0" />
               <div>
                 <p className="text-lg font-bold font-display">{stats.confirmedPayments}</p>
                 <p className="text-xs text-muted-foreground">Confirmados</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-yellow-500/20 bg-yellow-500/5">
+          <Card className="border-warning/20 bg-warning/5">
             <CardContent className="pt-4 pb-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-yellow-500 shrink-0" />
+              <Clock className="w-5 h-5 text-warning shrink-0" />
               <div>
                 <p className="text-lg font-bold font-display">{stats.pendingPayments}</p>
                 <p className="text-xs text-muted-foreground">Pendentes</p>

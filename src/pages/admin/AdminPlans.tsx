@@ -126,10 +126,15 @@ export default function AdminPlans() {
       features,
     };
 
+    const typedPayload = {
+      ...payload,
+      plan_type: payload.plan_type as "free" | "pro" | "business",
+    };
+
     if (editing) {
       const { error } = await supabase
         .from("subscription_plans")
-        .update(payload)
+        .update(typedPayload)
         .eq("id", editing.id);
       if (error) {
         toast.error("Erro ao atualizar: " + error.message);
@@ -139,7 +144,7 @@ export default function AdminPlans() {
     } else {
       const { error } = await supabase
         .from("subscription_plans")
-        .insert(payload as any);
+        .insert(typedPayload);
       if (error) {
         toast.error("Erro ao criar: " + error.message);
       } else {
