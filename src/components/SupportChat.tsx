@@ -17,7 +17,7 @@ Ajude os usuários com dúvidas sobre:
 - Problemas técnicos
 Se não souber responder, sugira entrar em contato pelo WhatsApp ou página de contato.`;
 
-export default function SupportChat() {
+export default function SupportChat({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Olá! 👋 Sou o assistente do Decode Analytics. Como posso ajudar?" },
