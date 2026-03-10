@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { FileText, BarChart3, CreditCard, LogOut, Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 const navItems = [
   { to: "/dashboard", icon: FileText, label: "Análise" },
