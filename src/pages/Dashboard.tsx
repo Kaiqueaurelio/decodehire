@@ -94,7 +94,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <JobParametersForm onSave={setJobParams} savedParams={jobParams} />
+          <JobParametersForm onSave={handleSetJobParams} savedParams={jobParams} />
           <ResumeUpload
             onResumeProcessed={(parsed, fileName) => {
               setParsedResume(parsed);
