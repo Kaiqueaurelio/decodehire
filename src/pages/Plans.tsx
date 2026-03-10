@@ -63,6 +63,20 @@ export default function Plans() {
     return target > current;
   };
 
+  if (isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="p-4 rounded-full bg-primary/10 text-primary">
+          <Shield className="w-10 h-10" />
+        </div>
+        <h1 className="font-display text-2xl font-bold">Acesso Administrativo</h1>
+        <p className="text-muted-foreground text-center max-w-md">
+          Como administrador, você já possui acesso ilimitado a todas as funcionalidades da plataforma.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="text-center">

@@ -47,7 +47,7 @@ export default function AppLayout() {
 
         <nav className="flex-1 p-4 space-y-1">
           <p className="text-xs uppercase tracking-wider text-sidebar-foreground/50 mb-3 px-3">Menu</p>
-          {navItems.map((item) => (
+          {navItems.filter(item => !(isAdmin && item.to === "/plans")).map((item) => (
             <Link
               key={item.to}
               to={item.to}
