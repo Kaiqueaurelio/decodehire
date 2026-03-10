@@ -4,7 +4,7 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Crown, Zap, Sparkles } from "lucide-react";
+import { Check, CreditCard, Crown, Zap, Sparkles, Rocket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Plan {
@@ -19,11 +19,19 @@ interface Plan {
 
 const planIcons: Record<string, React.ReactNode> = {
   free: <Zap className="w-6 h-6" />,
+  starter: <Rocket className="w-6 h-6" />,
   pro: <Sparkles className="w-6 h-6" />,
   business: <Crown className="w-6 h-6" />,
 };
 
-const planOrder = ["free", "pro", "business"];
+const planOrder = ["free", "starter", "pro", "business"];
+
+const planBadges: Record<string, { label: string; variant: "default" | "secondary" | "outline" } | null> = {
+  free: null,
+  starter: null,
+  pro: { label: "Mais Popular", variant: "default" },
+  business: { label: "Máximo Poder", variant: "secondary" },
+};
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -62,31 +70,26 @@ export default function Plans() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
         {plans.map((plan) => {
           const isCurrent = isCurrentPlan(plan.plan_type);
           const isPro = plan.plan_type === "pro";
-          const isBusiness = plan.plan_type === "business";
+          const badge = planBadges[plan.plan_type];
 
           return (
             <Card
               key={plan.id}
               className={`relative flex flex-col transition-all ${
                 isPro
-                  ? "border-primary shadow-lg scale-[1.02] ring-1 ring-primary/20"
-                  : isBusiness
+                  ? "border-primary shadow-lg ring-1 ring-primary/20 scale-[1.02]"
+                  : plan.plan_type === "business"
                     ? "border-accent shadow-md"
                     : ""
               }`}
             >
-              {isPro && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1">
-                  Mais Popular
-                </Badge>
-              )}
-              {isBusiness && (
-                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1">
-                  Máximo Poder
+              {badge && (
+                <Badge variant={badge.variant} className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs whitespace-nowrap">
+                  {badge.label}
                 </Badge>
               )}
 
@@ -94,23 +97,23 @@ export default function Plans() {
                 <div className="mx-auto mb-3 p-3 rounded-full bg-primary/10 text-primary w-fit">
                   {planIcons[plan.plan_type] || <Zap className="w-6 h-6" />}
                 </div>
-                <CardTitle className="font-display text-xl">{plan.name}</CardTitle>
+                <CardTitle className="font-display text-lg">{plan.name}</CardTitle>
                 <div className="mt-3">
-                  <span className="text-4xl font-display font-bold">
+                  <span className="text-3xl font-display font-bold">
                     {plan.price === 0 ? "Grátis" : `R$ ${plan.price.toFixed(2).replace(".", ",")}`}
                   </span>
                   {plan.price > 0 && <span className="text-muted-foreground text-sm">/mês</span>}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                <div className="mt-3 text-sm font-medium text-primary">
+                <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
+                <div className="mt-3 text-sm font-semibold text-primary">
                   {plan.daily_limit === null ? "Análises ilimitadas" : `${plan.daily_limit} análises/dia`}
                 </div>
               </CardHeader>
 
               <CardContent className="flex-1">
-                <ul className="space-y-3">
+                <ul className="space-y-2.5">
                   {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm">
+                    <li key={i} className="flex items-start gap-2 text-sm">
                       <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                       <span>{f}</span>
                     </li>
@@ -130,7 +133,7 @@ export default function Plans() {
                     onClick={() => navigate(`/checkout/${plan.id}`)}
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
-                    {plan.plan_type === "business" ? "Assinar Business" : "Assinar Pro"}
+                    Assinar {plan.name}
                   </Button>
                 ) : (
                   <Button variant="outline" className="w-full" disabled>

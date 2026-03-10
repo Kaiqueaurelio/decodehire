@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface UserPlanInfo {
   planName: string;
-  planType: "free" | "pro" | "business";
+  planType: "free" | "starter" | "pro" | "business";
   dailyLimit: number | null; // null = unlimited
   dailyUsage: number;
   canAnalyze: boolean;
@@ -16,7 +16,7 @@ interface UserPlanInfo {
 export function useUserPlan(): UserPlanInfo {
   const { user, isAdmin } = useAuth();
   const [planName, setPlanName] = useState("Gratuito");
-  const [planType, setPlanType] = useState<"free" | "pro" | "business">("free");
+  const [planType, setPlanType] = useState<"free" | "starter" | "pro" | "business">("free");
   const [dailyLimit, setDailyLimit] = useState<number | null>(5);
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ export function useUserPlan(): UserPlanInfo {
 
         if (plan) {
           setPlanName(plan.name);
-          setPlanType(plan.plan_type as "free" | "pro" | "business");
+          setPlanType(plan.plan_type as "free" | "starter" | "pro" | "business");
           setDailyLimit(plan.daily_limit);
         }
       } else {
@@ -90,7 +90,7 @@ export function useUserPlan(): UserPlanInfo {
   }, [user, isAdmin]);
 
   const canAnalyze = isAdmin || dailyLimit === null || dailyUsage < dailyLimit;
-  const canExport = isAdmin || planType === "pro" || planType === "business";
+  const canExport = isAdmin || planType === "starter" || planType === "pro" || planType === "business";
 
   return {
     planName,
