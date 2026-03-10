@@ -55,13 +55,33 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
     setParams((p) => ({ ...p, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!params.cargo.trim()) {
       toast.error("Informe o cargo da vaga.");
       return;
     }
     onSave(params);
-    toast.success("Parâmetros salvos!");
+    try {
+      // Auto-save as template using cargo name
+      const existingTemplate = templates.find(
+        (t) => t.name.toLowerCase() === params.cargo.trim().toLowerCase()
+      );
+      if (existingTemplate) {
+        // Update existing template
+        const { error } = await supabase
+          .from("job_templates")
+          .update({ parameters: params as any, name: params.cargo.trim() })
+          .eq("id", existingTemplate.id);
+        if (error) throw error;
+      } else {
+        await saveTemplate(params.cargo.trim(), params);
+      }
+      toast.success("Parâmetros salvos!");
+    } catch (err: any) {
+      console.error("Erro ao salvar parâmetros:", err);
+      // Still saved locally, just not persisted
+      toast.success("Parâmetros aplicados (erro ao salvar no banco: " + (err.message || "") + ")");
+    }
   };
 
   const handleSelectTemplate = (value: string) => {
