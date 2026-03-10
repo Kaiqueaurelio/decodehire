@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { FileText, BarChart3, CreditCard, Settings, LogOut, Shield, Menu, X, LayoutDashboard, Users } from "lucide-react";
+import { FileText, BarChart3, CreditCard, Settings, LogOut, Shield, Menu, X, LayoutDashboard, Users, Package } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -14,8 +14,9 @@ const navItems = [
 const adminItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Painel Admin" },
   { to: "/admin/users", icon: Users, label: "Usuários" },
-  { to: "/admin/payments/pix", icon: Settings, label: "Config Pix" },
+  { to: "/admin/plans", icon: Package, label: "Planos" },
   { to: "/admin/payments/review", icon: Shield, label: "Pagamentos" },
+  { to: "/admin/payments/pix", icon: Settings, label: "Config Pix" },
 ];
 
 export default function AppLayout() {
