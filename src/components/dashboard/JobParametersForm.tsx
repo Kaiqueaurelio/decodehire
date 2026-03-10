@@ -182,7 +182,20 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição da vaga *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Descrição da vaga *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={generating || !params.cargo.trim()}
+                className="text-xs gap-1.5 text-primary hover:text-primary"
+              >
+                {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                {generating ? "Gerando..." : "Gerar com IA"}
+              </Button>
+            </div>
             <Textarea
               placeholder="Descreva as responsabilidades, habilidades necessárias, requisitos e diferenciais da vaga..."
               value={params.descricao}

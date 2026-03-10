@@ -107,6 +107,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <MetricsDashboard />
+
       <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
