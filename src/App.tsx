@@ -40,6 +40,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <WhatsAppButton />
+          <SupportChat />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
