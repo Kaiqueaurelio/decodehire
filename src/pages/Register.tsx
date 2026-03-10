@@ -25,7 +25,10 @@ export default function Register() {
     const { error } = await signUp(email, password, fullName);
     setLoading(false);
     if (error) {
-      toast.error("Erro ao cadastrar: " + error.message);
+      const msg = error.message?.toLowerCase().includes("already registered")
+        ? "Este email já está cadastrado. Tente fazer login."
+        : error.message;
+      toast.error(msg);
     } else {
       toast.success("Cadastro realizado! Verifique seu email para confirmar.");
       navigate("/login");
