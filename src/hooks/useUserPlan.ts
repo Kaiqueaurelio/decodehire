@@ -16,7 +16,7 @@ interface UserPlanInfo {
 export function useUserPlan(): UserPlanInfo {
   const { user, isAdmin } = useAuth();
   const [planName, setPlanName] = useState("Gratuito");
-  const [planType, setPlanType] = useState<"free" | "pro" | "business">("free");
+  const [planType, setPlanType] = useState<"free" | "starter" | "pro" | "business">("free");
   const [dailyLimit, setDailyLimit] = useState<number | null>(5);
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
