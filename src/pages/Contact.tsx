@@ -101,7 +101,7 @@ export default function Contact() {
               <div>
                 <h3 className="font-semibold text-foreground mb-1">WhatsApp</h3>
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent("Olá, gostaria de saber mais sobre a Decode Analytics!")}`}
+                  href={`https://wa.me/5511939222885?text=${encodeURIComponent("Olá, gostaria de saber mais sobre a Decode Analytics!")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
