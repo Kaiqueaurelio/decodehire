@@ -90,7 +90,7 @@ export function useUserPlan(): UserPlanInfo {
   }, [user, isAdmin]);
 
   const canAnalyze = isAdmin || dailyLimit === null || dailyUsage < dailyLimit;
-  const canExport = isAdmin || planType === "pro" || planType === "business";
+  const canExport = isAdmin || planType === "starter" || planType === "pro" || planType === "business";
 
   return {
     planName,
