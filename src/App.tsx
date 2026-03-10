@@ -14,6 +14,8 @@ import Plans from "@/pages/Plans";
 import Checkout from "@/pages/Checkout";
 import PixConfig from "@/pages/admin/PixConfig";
 import PaymentReview from "@/pages/admin/PaymentReview";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminUsers from "@/pages/admin/AdminUsers";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,8 @@ const App = () => (
               <Route path="/history" element={<History />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/checkout/:planId" element={<Checkout />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/payments/pix" element={<AdminRoute><PixConfig /></AdminRoute>} />
               <Route path="/admin/payments/review" element={<AdminRoute><PaymentReview /></AdminRoute>} />
             </Route>
