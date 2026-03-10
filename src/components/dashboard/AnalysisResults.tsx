@@ -18,6 +18,7 @@ export interface AnalysisResult {
 interface Props {
   result: AnalysisResult | null;
   loading: boolean;
+  jobParams?: any;
 }
 
 export function AnalysisResults({ result, loading }: Props) {
