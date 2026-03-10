@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy, CheckCircle, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { generatePixCode } from "@/lib/pix";
 
 export default function Checkout() {
   const { planId } = useParams();
@@ -84,24 +85,34 @@ export default function Checkout() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* QR Code */}
-          <div className="flex justify-center">
-            <div className="bg-card p-4 rounded-xl border border-border">
-              <QRCodeSVG value={pixConfig.pix_code} size={200} />
-            </div>
-          </div>
+          {(() => {
+            const dynamicPixCode = generatePixCode(pixConfig.pix_code, Number(plan.price));
+            return (
+              <>
+                <div className="flex justify-center">
+                  <div className="bg-card p-4 rounded-xl border border-border">
+                    <QRCodeSVG value={dynamicPixCode} size={200} />
+                  </div>
+                </div>
 
-          {/* Pix Code */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Código Copia e Cola:</p>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-muted rounded-lg p-3 text-xs break-all font-mono max-h-20 overflow-auto">
-                {pixConfig.pix_code}
-              </div>
-              <Button variant="outline" size="icon" onClick={handleCopy} className="shrink-0">
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+                {/* Pix Code */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Código Copia e Cola:</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-muted rounded-lg p-3 text-xs break-all font-mono max-h-20 overflow-auto">
+                      {dynamicPixCode}
+                    </div>
+                    <Button variant="outline" size="icon" onClick={() => {
+                      navigator.clipboard.writeText(dynamicPixCode);
+                      toast.success("Código Pix copiado!");
+                    }} className="shrink-0">
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Merchant */}
           <div className="text-sm">
