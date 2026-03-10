@@ -552,7 +552,7 @@ export default function AdminDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 px-2.5 text-green-600 hover:bg-green-500/10"
+                      className="h-8 px-2.5 text-accent hover:bg-accent/10"
                       onClick={() => handleQuickAction(p.id, "confirmed", p.user_id, p.plan_id)}
                     >
                       <CheckCircle className="w-3.5 h-3.5 mr-1" />
