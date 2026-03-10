@@ -86,10 +86,15 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
       toast.error("Preencha ao menos o cargo antes de salvar.");
       return;
     }
-    await saveTemplate(templateName.trim(), params);
-    setTemplateName("");
-    setSaveDialogOpen(false);
-    toast.success("Template salvo com sucesso!");
+    try {
+      await saveTemplate(templateName.trim(), params);
+      setTemplateName("");
+      setSaveDialogOpen(false);
+      toast.success("Template salvo com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao salvar template:", err);
+      toast.error("Erro ao salvar template: " + (err.message || "Tente novamente"));
+    }
   };
 
   const handleGenerateDescription = async () => {
