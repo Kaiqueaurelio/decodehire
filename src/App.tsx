@@ -14,6 +14,9 @@ import Dashboard from "@/pages/Dashboard";
 import History from "@/pages/History";
 import Plans from "@/pages/Plans";
 import Checkout from "@/pages/Checkout";
+import Profile from "@/pages/Profile";
+import About from "@/pages/About";
+import Terms from "@/pages/Terms";
 import PixConfig from "@/pages/admin/PixConfig";
 import PaymentReview from "@/pages/admin/PaymentReview";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -37,11 +40,14 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/terms" element={<Terms />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/history" element={<History />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/checkout/:planId" element={<Checkout />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route path="/admin" element={<AdminDashboard />} />

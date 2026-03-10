@@ -2,14 +2,16 @@ import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { FileText, BarChart3, CreditCard, LogOut, Shield, Menu, X } from "lucide-react";
+import { BarChart3, CreditCard, LogOut, Shield, Menu, X, User, Info, FileText as FileTextIcon } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
+import logo from "@/assets/logo.jpeg";
 
 const navItems = [
-  { to: "/dashboard", icon: FileText, label: "Análise" },
+  { to: "/dashboard", icon: FileTextIcon, label: "Análise" },
   { to: "/history", icon: BarChart3, label: "Histórico" },
   { to: "/plans", icon: CreditCard, label: "Planos" },
+  { to: "/profile", icon: User, label: "Perfil" },
 ];
 
 export default function AppLayout() {
@@ -28,12 +30,10 @@ export default function AppLayout() {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-6 border-b border-sidebar-border">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <FileText className="w-4 h-4 text-sidebar-primary-foreground" />
-            </div>
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <img src={logo} alt="Decode Analytics" className="w-9 h-9 rounded-lg object-cover" />
             <span className="font-display font-bold text-lg text-sidebar-primary-foreground">
-              Analisador IA
+              Decode Analytics
             </span>
           </Link>
         </div>
@@ -106,7 +106,10 @@ export default function AppLayout() {
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
-          <span className="font-display font-bold lg:hidden">Analisador IA</span>
+          <div className="flex items-center gap-2 lg:hidden">
+            <img src={logo} alt="Decode Analytics" className="w-7 h-7 rounded-md object-cover" />
+            <span className="font-display font-bold">Decode Analytics</span>
+          </div>
           <div className="flex items-center gap-2 ml-auto">
             <NotificationBell />
           </div>
@@ -116,8 +119,13 @@ export default function AppLayout() {
           <Outlet />
         </main>
 
-        <footer className="text-center text-xs text-muted-foreground py-4 border-t border-border">
-          © 2026 Decode Analytics — Criado por Kaique Aurélio
+        <footer className="text-center text-xs text-muted-foreground py-4 border-t border-border space-y-1">
+          <div className="flex justify-center gap-3">
+            <Link to="/about" className="hover:text-primary transition-colors">Sobre nós</Link>
+            <span>•</span>
+            <Link to="/terms" className="hover:text-primary transition-colors">Termos de uso</Link>
+          </div>
+          <p>© 2026 Decode Analytics — Criado por Kaique Aurélio</p>
         </footer>
       </div>
     </div>
