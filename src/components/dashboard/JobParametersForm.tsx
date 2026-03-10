@@ -203,8 +203,28 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
               <Input placeholder="Ex: Analista de Marketing" value={params.cargo} onChange={(e) => update("cargo", e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Experiência mínima (anos)</Label>
-              <Input type="number" min={0} value={params.experienciaMinima} onChange={(e) => update("experienciaMinima", parseInt(e.target.value) || 0)} />
+              <Label>Experiência mínima</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  className="flex-1"
+                  value={params.experienciaMinima}
+                  onChange={(e) => update("experienciaMinima", parseInt(e.target.value) || 0)}
+                />
+                <Select
+                  value={params.experienciaUnidade || "anos"}
+                  onValueChange={(v) => update("experienciaUnidade", v)}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anos">Anos</SelectItem>
+                    <SelectItem value="meses">Meses</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
