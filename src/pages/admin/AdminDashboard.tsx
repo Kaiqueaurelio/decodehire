@@ -519,7 +519,7 @@ export default function AdminDashboard() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-500" />
+                <Clock className="w-4 h-4 text-warning" />
                 Pagamentos Aguardando Revisão
               </CardTitle>
               <Link to="/admin/payments/review">
