@@ -13,9 +13,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Briefcase, Save, ChevronDown, BookmarkPlus, Trash2 } from "lucide-react";
+import { Briefcase, Save, ChevronDown, BookmarkPlus, Trash2, Wand2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useJobTemplates } from "@/hooks/useJobTemplates";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface JobParameters {
   cargo: string;
@@ -46,6 +47,7 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   const { templates, loading: templatesLoading, saveTemplate, deleteTemplate } = useJobTemplates();
 
@@ -88,6 +90,34 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
     setTemplateName("");
     setSaveDialogOpen(false);
     toast.success("Template salvo com sucesso!");
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!params.cargo.trim()) {
+      toast.error("Informe o cargo antes de gerar a descrição.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-job-description", {
+        body: {
+          cargo: params.cargo,
+          formacao: params.formacao,
+          experienciaMinima: params.experienciaMinima,
+          certificacoes: params.certificacoes,
+          idiomas: params.idiomas,
+        },
+      });
+      if (error) throw error;
+      if (data?.description) {
+        update("descricao", data.description);
+        toast.success("Descrição gerada com sucesso!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar descrição");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleDeleteTemplate = async (id: string) => {
@@ -152,7 +182,20 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição da vaga *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Descrição da vaga *</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={generating || !params.cargo.trim()}
+                className="text-xs gap-1.5 text-primary hover:text-primary"
+              >
+                {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                {generating ? "Gerando..." : "Gerar com IA"}
+              </Button>
+            </div>
             <Textarea
               placeholder="Descreva as responsabilidades, habilidades necessárias, requisitos e diferenciais da vaga..."
               value={params.descricao}
