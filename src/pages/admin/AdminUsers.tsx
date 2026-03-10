@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, ShieldCheck, ShieldOff, Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Users, ShieldCheck, ShieldOff, Search, CreditCard, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -23,25 +30,39 @@ interface UserRole {
   role: string;
 }
 
+interface UserSub {
+  user_id: string;
+  plan_id: string;
+  status: string;
+}
+
+type FilterType = "all" | "admin" | "with_plan" | "free";
+
 export default function AdminUsers() {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [subs, setSubs] = useState<UserSub[]>([]);
+  const [plans, setPlans] = useState<Map<string, string>>(new Map());
   const [analysisCounts, setAnalysisCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<FilterType>("all");
 
   const fetchData = async () => {
-    const [usersRes, rolesRes, analysesRes] = await Promise.all([
+    const [usersRes, rolesRes, analysesRes, subsRes, plansRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("analysis_results").select("user_id"),
+      supabase.from("user_subscriptions").select("user_id, plan_id, status").eq("status", "active"),
+      supabase.from("subscription_plans").select("id, name"),
     ]);
     setUsers(usersRes.data || []);
     setRoles(rolesRes.data || []);
+    setSubs(subsRes.data || []);
+    setPlans(new Map((plansRes.data || []).map((p) => [p.id, p.name])));
 
-    // Count analyses per user
     const counts: Record<string, number> = {};
     (analysesRes.data || []).forEach((a) => {
       counts[a.user_id] = (counts[a.user_id] || 0) + 1;
@@ -54,15 +75,34 @@ export default function AdminUsers() {
     fetchData();
   }, []);
 
+  const getUserPlan = (userId: string) => {
+    const sub = subs.find((s) => s.user_id === userId);
+    if (!sub) return null;
+    return plans.get(sub.plan_id) || null;
+  };
+
   const filteredUsers = useMemo(() => {
-    if (!search.trim()) return users;
-    const q = search.toLowerCase();
-    return users.filter(
-      (u) =>
-        (u.full_name || "").toLowerCase().includes(q) ||
-        (u.email || "").toLowerCase().includes(q)
-    );
-  }, [users, search]);
+    let result = users;
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (u) =>
+          (u.full_name || "").toLowerCase().includes(q) ||
+          (u.email || "").toLowerCase().includes(q)
+      );
+    }
+
+    if (filter === "admin") {
+      result = result.filter((u) => roles.some((r) => r.user_id === u.user_id && r.role === "admin"));
+    } else if (filter === "with_plan") {
+      result = result.filter((u) => subs.some((s) => s.user_id === u.user_id));
+    } else if (filter === "free") {
+      result = result.filter((u) => !subs.some((s) => s.user_id === u.user_id));
+    }
+
+    return result;
+  }, [users, search, filter, roles, subs]);
 
   const getUserRoles = (userId: string) =>
     roles.filter((r) => r.user_id === userId).map((r) => r.role);
@@ -94,6 +134,10 @@ export default function AdminUsers() {
     }
   };
 
+  const adminCount = roles.filter((r) => r.role === "admin").length;
+  const activeSubCount = subs.length;
+  const totalAnalyses = Object.values(analysisCounts).reduce((a, b) => a + b, 0);
+
   return (
     <div className="space-y-6">
       <div>
@@ -101,21 +145,74 @@ export default function AdminUsers() {
         <p className="text-muted-foreground text-sm mt-1">Visualize e gerencie permissões dos usuários</p>
       </div>
 
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="pt-4 pb-4 flex items-center gap-3">
+            <Users className="w-4 h-4 text-primary" />
+            <div>
+              <p className="text-lg font-bold font-display">{users.length}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 flex items-center gap-3">
+            <ShieldCheck className="w-4 h-4 text-accent" />
+            <div>
+              <p className="text-lg font-bold font-display">{adminCount}</p>
+              <p className="text-xs text-muted-foreground">Admins</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 flex items-center gap-3">
+            <CreditCard className="w-4 h-4 text-primary" />
+            <div>
+              <p className="text-lg font-bold font-display">{activeSubCount}</p>
+              <p className="text-xs text-muted-foreground">Com plano</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 flex items-center gap-3">
+            <FileText className="w-4 h-4 text-info" />
+            <div>
+              <p className="text-lg font-bold font-display">{totalAnalyses}</p>
+              <p className="text-xs text-muted-foreground">Análises</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="flex items-center gap-2 font-display">
               <Users className="w-5 h-5 text-primary" />
-              Usuários ({users.length})
+              Usuários ({filteredUsers.length})
             </CardTitle>
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
+            <div className="flex gap-2 flex-col sm:flex-row">
+              <Select value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
+                <SelectTrigger className="w-full sm:w-36 h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="with_plan">Com plano</SelectItem>
+                  <SelectItem value="free">Gratuitos</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative w-full sm:w-56">
+                <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-9 text-sm"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -128,7 +225,7 @@ export default function AdminUsers() {
             </div>
           ) : filteredUsers.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">
-              {search ? "Nenhum resultado encontrado" : "Nenhum usuário cadastrado"}
+              {search || filter !== "all" ? "Nenhum resultado encontrado" : "Nenhum usuário cadastrado"}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -137,6 +234,7 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Plano</TableHead>
                     <TableHead>Análises</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Cadastro</TableHead>
@@ -147,23 +245,31 @@ export default function AdminUsers() {
                   {filteredUsers.map((u) => {
                     const admin = isUserAdmin(u.user_id);
                     const isSelf = u.user_id === user?.id;
+                    const userPlan = getUserPlan(u.user_id);
                     return (
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
-                        <TableCell className="text-sm">{u.email || "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{u.email || "—"}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{analysisCounts[u.user_id] || 0}</Badge>
+                          {userPlan ? (
+                            <Badge variant="default" className="text-xs">{userPlan}</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">Gratuito</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium">{analysisCounts[u.user_id] || 0}</span>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
                             {getUserRoles(u.user_id).map((role) => (
-                              <Badge key={role} variant={role === "admin" ? "default" : "secondary"}>
+                              <Badge key={role} variant={role === "admin" ? "default" : "secondary"} className="text-xs">
                                 {role}
                               </Badge>
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {new Date(u.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell>
@@ -172,11 +278,12 @@ export default function AdminUsers() {
                             variant={admin ? "destructive" : "outline"}
                             disabled={isSelf || toggling === u.user_id}
                             onClick={() => toggleAdmin(u.user_id, admin)}
+                            className="text-xs h-8"
                           >
                             {admin ? (
-                              <><ShieldOff className="w-4 h-4 mr-1" /> Remover</>
+                              <><ShieldOff className="w-3.5 h-3.5 mr-1" /> Remover</>
                             ) : (
-                              <><ShieldCheck className="w-4 h-4 mr-1" /> Promover</>
+                              <><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Promover</>
                             )}
                           </Button>
                         </TableCell>
