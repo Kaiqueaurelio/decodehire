@@ -23,6 +23,7 @@ import PaymentReview from "@/pages/admin/PaymentReview";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminPlans from "@/pages/admin/AdminPlans";
+import AdminContacts from "@/pages/admin/AdminContacts";
 import AdminLayout from "@/components/layout/AdminLayout";
 import NotFound from "@/pages/NotFound";
 
