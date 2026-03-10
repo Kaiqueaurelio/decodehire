@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { FileText } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import logo from "@/assets/logo.jpeg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,6 @@ export default function Login() {
   const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users away from login
   useEffect(() => {
     if (!authLoading && user) {
       navigate("/dashboard", { replace: true });
@@ -57,11 +56,13 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Analisador de Currículos IA</h1>
-          <p className="text-muted-foreground mt-2">Entre na sua conta para começar</p>
+          <img
+            src={logo}
+            alt="Decode Analytics"
+            className="w-20 h-20 rounded-2xl mx-auto mb-4 object-cover shadow-lg"
+          />
+          <h1 className="font-display text-3xl font-bold text-foreground">Decode Analytics</h1>
+          <p className="text-muted-foreground mt-2">Analisador de Currículos com IA</p>
         </div>
 
         <Card>
@@ -138,7 +139,13 @@ export default function Login() {
           </form>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-8">
+        <div className="flex justify-center gap-4 mt-6 text-xs text-muted-foreground">
+          <Link to="/about" className="hover:text-primary transition-colors">Sobre nós</Link>
+          <span>•</span>
+          <Link to="/terms" className="hover:text-primary transition-colors">Termos de uso</Link>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-4">
           © 2026 Decode Analytics — Criado por Kaique Aurélio
         </p>
       </div>

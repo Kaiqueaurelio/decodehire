@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, ShieldCheck, ShieldOff, Search, CreditCard, FileText } from "lucide-react";
+import { Users, ShieldCheck, ShieldOff, Search, CreditCard, FileText, ArrowUpCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -34,6 +34,13 @@ interface UserSub {
   user_id: string;
   plan_id: string;
   status: string;
+  id: string;
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  plan_type: string;
 }
 
 type FilterType = "all" | "admin" | "with_plan" | "free";
@@ -43,10 +50,12 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [subs, setSubs] = useState<UserSub[]>([]);
+  const [plansList, setPlansList] = useState<Plan[]>([]);
   const [plans, setPlans] = useState<Map<string, string>>(new Map());
   const [analysisCounts, setAnalysisCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [changingPlan, setChangingPlan] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
 
@@ -55,12 +64,13 @@ export default function AdminUsers() {
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("analysis_results").select("user_id"),
-      supabase.from("user_subscriptions").select("user_id, plan_id, status").eq("status", "active"),
-      supabase.from("subscription_plans").select("id, name"),
+      supabase.from("user_subscriptions").select("id, user_id, plan_id, status").eq("status", "active"),
+      supabase.from("subscription_plans").select("id, name, plan_type").eq("is_active", true),
     ]);
     setUsers(usersRes.data || []);
     setRoles(rolesRes.data || []);
     setSubs(subsRes.data || []);
+    setPlansList(plansRes.data || []);
     setPlans(new Map((plansRes.data || []).map((p) => [p.id, p.name])));
 
     const counts: Record<string, number> = {};
@@ -81,9 +91,38 @@ export default function AdminUsers() {
     return plans.get(sub.plan_id) || null;
   };
 
+  const getUserPlanId = (userId: string) => {
+    const sub = subs.find((s) => s.user_id === userId);
+    return sub?.plan_id || "";
+  };
+
+  const handleChangePlan = async (userId: string, newPlanId: string) => {
+    setChangingPlan(userId);
+    try {
+      const existingSub = subs.find((s) => s.user_id === userId);
+      if (existingSub) {
+        const { error } = await supabase
+          .from("user_subscriptions")
+          .update({ plan_id: newPlanId, started_at: new Date().toISOString() })
+          .eq("id", existingSub.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("user_subscriptions")
+          .insert({ user_id: userId, plan_id: newPlanId, status: "active" });
+        if (error) throw error;
+      }
+      toast.success("Plano do usuário atualizado!");
+      await fetchData();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    } finally {
+      setChangingPlan(null);
+    }
+  };
+
   const filteredUsers = useMemo(() => {
     let result = users;
-
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -92,7 +131,6 @@ export default function AdminUsers() {
           (u.email || "").toLowerCase().includes(q)
       );
     }
-
     if (filter === "admin") {
       result = result.filter((u) => roles.some((r) => r.user_id === u.user_id && r.role === "admin"));
     } else if (filter === "with_plan") {
@@ -100,7 +138,6 @@ export default function AdminUsers() {
     } else if (filter === "free") {
       result = result.filter((u) => !subs.some((s) => s.user_id === u.user_id));
     }
-
     return result;
   }, [users, search, filter, roles, subs]);
 
@@ -142,10 +179,9 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold">Gerenciamento de Usuários</h1>
-        <p className="text-muted-foreground text-sm mt-1">Visualize e gerencie permissões dos usuários</p>
+        <p className="text-muted-foreground text-sm mt-1">Visualize, gerencie permissões e planos dos usuários</p>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
@@ -235,10 +271,11 @@ export default function AdminUsers() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Plano</TableHead>
+                    <TableHead>Alterar Plano</TableHead>
                     <TableHead>Análises</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Cadastro</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead>Admin</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -246,6 +283,7 @@ export default function AdminUsers() {
                     const admin = isUserAdmin(u.user_id);
                     const isSelf = u.user_id === user?.id;
                     const userPlan = getUserPlan(u.user_id);
+                    const userPlanId = getUserPlanId(u.user_id);
                     return (
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
@@ -256,6 +294,24 @@ export default function AdminUsers() {
                           ) : (
                             <Badge variant="secondary" className="text-xs">Gratuito</Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={userPlanId}
+                            onValueChange={(v) => handleChangePlan(u.user_id, v)}
+                            disabled={changingPlan === u.user_id}
+                          >
+                            <SelectTrigger className="w-32 h-8 text-xs">
+                              <SelectValue placeholder="Selecionar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {plansList.map((p) => (
+                                <SelectItem key={p.id} value={p.id} className="text-xs">
+                                  {p.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           <span className="text-sm font-medium">{analysisCounts[u.user_id] || 0}</span>
