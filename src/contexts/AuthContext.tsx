@@ -34,36 +34,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check if URL contains OAuth callback tokens
     const hasOAuthCallback = window.location.hash?.includes("access_token") ||
       window.location.search?.includes("code=");
 
-    // Set up auth state listener FIRST (primary source of truth)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth event:", event, "has session:", !!session);
       authEventFired.current = true;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => checkAdmin(session.user.id), 0);
+        // Fire and forget - don't block the auth callback
+        checkAdmin(session.user.id);
       } else {
         setIsAdmin(false);
       }
       setLoading(false);
     });
 
-    // Fallback: check existing session, but only finalize loading
-    // if there's no OAuth callback pending
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // If onAuthStateChange already fired, skip
       if (authEventFired.current) return;
-
-      // If there's an OAuth callback in the URL, wait for onAuthStateChange
       if (hasOAuthCallback) {
         console.log("OAuth callback detected, waiting for auth event...");
         return;
       }
-
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -72,12 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Safety timeout: if nothing fires in 5s, stop loading
     const timeout = setTimeout(() => {
-      if (loading) {
-        console.warn("Auth timeout - forcing loading to false");
-        setLoading(false);
-      }
+      setLoading((prev) => {
+        if (prev) console.warn("Auth timeout - forcing loading to false");
+        return false;
+      });
     }, 5000);
 
     return () => {

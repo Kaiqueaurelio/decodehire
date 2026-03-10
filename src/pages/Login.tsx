@@ -40,7 +40,7 @@ export default function Login() {
     setSocialLoading(provider);
     try {
       const { error } = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin + "/dashboard",
+        redirect_uri: window.location.origin,
       });
       if (error) {
         toast.error("Erro ao entrar com " + provider + ": " + error.message);
