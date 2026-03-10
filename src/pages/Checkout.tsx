@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Copy, CheckCircle, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { generatePixCode } from "@/lib/pix";
 
 export default function Checkout() {
   const { planId } = useParams();
