@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { FileText, BarChart3, CreditCard, LogOut, Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 const navItems = [
   { to: "/dashboard", icon: FileText, label: "Análise" },
@@ -99,12 +100,16 @@ export default function AppLayout() {
       {/* Main content */}
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-          <span className="font-display font-bold">Analisador IA</span>
-          <div className="w-10" />
+        <header className="flex items-center justify-between p-4 border-b border-border bg-card">
+          <div className="lg:hidden">
+            <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
+          <span className="font-display font-bold lg:hidden">Analisador IA</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <NotificationBell />
+          </div>
         </header>
 
         <main className="flex-1 p-4 md:p-8">
