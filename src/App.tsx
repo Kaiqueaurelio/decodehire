@@ -38,8 +38,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <WhatsAppButton />
-          <SupportChat />
+          <FloatingActions />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
