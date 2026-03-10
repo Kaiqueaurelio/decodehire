@@ -79,6 +79,33 @@ export type Database = {
         }
         Relationships: []
       }
+      job_templates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parameters: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parameters?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parameters?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
