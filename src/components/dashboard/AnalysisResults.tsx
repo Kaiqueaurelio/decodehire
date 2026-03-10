@@ -51,6 +51,19 @@ export function AnalysisResults({ result, loading, jobParams }: Props) {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => exportAnalysisPdf(result, jobParams)}
+        >
+          <Download className="w-4 h-4" />
+          Exportar PDF
+        </Button>
+      </div>
+
       {/* Score Card */}
       <Card>
         <CardContent className="pt-6">
