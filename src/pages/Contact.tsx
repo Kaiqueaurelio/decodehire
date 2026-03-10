@@ -95,19 +95,22 @@ export default function Contact() {
 
           <Card>
             <CardContent className="pt-6 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                <MessageSquare className="w-5 h-5 text-green-600" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold text-foreground mb-1">WhatsApp</h3>
-                <a
-                  href={`https://wa.me/5511939222885?text=${encodeURIComponent("Olá, gostaria de saber mais sobre a Decode Analytics!")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Enviar mensagem
-                </a>
+                <p className="text-sm text-muted-foreground mb-3">Fale conosco diretamente pelo WhatsApp</p>
+                <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                  <a
+                    href={`https://wa.me/5511939222885?text=${encodeURIComponent("Olá, gostaria de saber mais sobre a Decode Analytics!")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Enviar mensagem
+                  </a>
+                </Button>
               </div>
             </CardContent>
           </Card>
