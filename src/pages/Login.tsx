@@ -14,6 +14,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -26,6 +27,22 @@ export default function Login() {
       toast.error("Erro ao entrar: " + error.message);
     } else {
       navigate("/dashboard");
+    }
+  };
+
+  const handleSocialLogin = async (provider: "google" | "apple") => {
+    setSocialLoading(provider);
+    try {
+      const { error } = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        toast.error("Erro ao entrar com " + provider + ": " + error.message);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao entrar com " + provider);
+    } finally {
+      setSocialLoading(null);
     }
   };
 
