@@ -21,7 +21,7 @@ interface Props {
   jobParams?: any;
 }
 
-export function AnalysisResults({ result, loading }: Props) {
+export function AnalysisResults({ result, loading, jobParams }: Props) {
   if (loading) {
     return (
       <Card className="h-full flex items-center justify-center min-h-[400px]">
