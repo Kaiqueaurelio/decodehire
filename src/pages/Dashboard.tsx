@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { MetricsDashboard } from "@/components/dashboard/MetricsDashboard";
 
 export default function Dashboard() {
   const { user } = useAuth();
