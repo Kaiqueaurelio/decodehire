@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Crown, Zap, Sparkles, Rocket } from "lucide-react";
+import { Check, CreditCard, Crown, Zap, Sparkles, Rocket, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Plan {
