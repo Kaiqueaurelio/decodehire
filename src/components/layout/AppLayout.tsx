@@ -2,21 +2,13 @@ import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { FileText, BarChart3, CreditCard, Settings, LogOut, Shield, Menu, X, LayoutDashboard, Users, Package } from "lucide-react";
+import { FileText, BarChart3, CreditCard, LogOut, Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { to: "/dashboard", icon: FileText, label: "Análise" },
   { to: "/history", icon: BarChart3, label: "Histórico" },
   { to: "/plans", icon: CreditCard, label: "Planos" },
-];
-
-const adminItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Painel Admin" },
-  { to: "/admin/users", icon: Users, label: "Usuários" },
-  { to: "/admin/plans", icon: Package, label: "Planos" },
-  { to: "/admin/payments/review", icon: Shield, label: "Pagamentos" },
-  { to: "/admin/payments/pix", icon: Settings, label: "Config Pix" },
 ];
 
 export default function AppLayout() {
