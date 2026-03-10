@@ -75,7 +75,13 @@ export default function History() {
       return;
     }
     const jp = item.job_parameters as any;
-    exportToCsv([item], `analise-${jp?.cargo || "resultado"}.csv`);
+    const r = item.result as any;
+    exportAnalysisPdf(
+      r,
+      jp,
+      new Date(item.created_at).toLocaleDateString("pt-BR")
+    );
+    toast.success("PDF exportado!");
   };
 
   return (
