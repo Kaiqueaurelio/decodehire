@@ -5,8 +5,9 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Download, Lock } from "lucide-react";
+import { BarChart3, Download, Lock, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { exportAnalysisPdf } from "@/lib/exportPdf";
 
 interface HistoryItem {
   id: string;
