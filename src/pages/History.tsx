@@ -138,18 +138,18 @@ export default function History() {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleExportSingle(item)}
-                        title={canExport ? "Exportar CSV" : "Disponível no plano Pro"}
-                      >
-                        {canExport ? (
-                          <Download className="w-4 h-4" />
-                        ) : (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleExportSingle(item)}
+                          title={canExport ? "Exportar PDF" : "Disponível no plano Pro"}
+                        >
+                          {canExport ? (
+                            <FileText className="w-4 h-4" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       <Badge variant={isCompatible ? "default" : "destructive"}>
                         {r?.classificacao}
                       </Badge>
