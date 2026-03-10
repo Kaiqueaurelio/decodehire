@@ -33,10 +33,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event:", event);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Use setTimeout to avoid potential Supabase client deadlock
         setTimeout(() => checkAdmin(session.user.id), 0);
       } else {
         setIsAdmin(false);
@@ -44,9 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      // Only update if onAuthStateChange hasn't already fired
+      setSession(prev => prev ?? session);
+      setUser(prev => prev ?? session?.user ?? null);
       if (session?.user) {
         checkAdmin(session.user.id);
       }
