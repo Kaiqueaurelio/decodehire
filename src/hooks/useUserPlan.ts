@@ -55,7 +55,7 @@ export function useUserPlan(): UserPlanInfo {
 
         if (plan) {
           setPlanName(plan.name);
-          setPlanType(plan.plan_type as "free" | "pro" | "business");
+          setPlanType(plan.plan_type as "free" | "starter" | "pro" | "business");
           setDailyLimit(plan.daily_limit);
         }
       } else {
