@@ -22,6 +22,7 @@ export interface JobParameters {
   cargo: string;
   descricao: string;
   experienciaMinima: number;
+  experienciaUnidade: "anos" | "meses";
   formacao: string;
   certificacoes: string;
   idiomas: string;
@@ -31,6 +32,7 @@ const defaultParams: JobParameters = {
   cargo: "",
   descricao: "",
   experienciaMinima: 0,
+  experienciaUnidade: "anos",
   formacao: "",
   certificacoes: "",
   idiomas: "",
