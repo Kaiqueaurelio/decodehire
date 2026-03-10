@@ -21,7 +21,7 @@ export function useUserPlan(): UserPlanInfo {
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchPlanInfo = async () => {
+  const fetchPlanInfo = async (signal?: AbortSignal) => {
     if (!user) {
       setLoading(false);
       return;
@@ -46,12 +46,16 @@ export function useUserPlan(): UserPlanInfo {
         .limit(1)
         .maybeSingle();
 
+      if (signal?.aborted) return;
+
       if (sub?.plan_id) {
         const { data: plan } = await supabase
           .from("subscription_plans")
           .select("name, plan_type, daily_limit")
           .eq("id", sub.plan_id)
           .single();
+
+        if (signal?.aborted) return;
 
         if (plan) {
           setPlanName(plan.name);
@@ -67,6 +71,8 @@ export function useUserPlan(): UserPlanInfo {
           .limit(1)
           .maybeSingle();
 
+        if (signal?.aborted) return;
+
         if (freePlan) {
           setPlanName(freePlan.name);
           setDailyLimit(freePlan.daily_limit);
@@ -77,16 +83,22 @@ export function useUserPlan(): UserPlanInfo {
       const { data: usageData } = await supabase.rpc("get_daily_usage", {
         _user_id: user.id,
       });
+
+      if (signal?.aborted) return;
+
       setDailyUsage(typeof usageData === "number" ? usageData : 0);
     } catch (err) {
+      if (signal?.aborted) return;
       console.error("Error fetching plan info:", err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPlanInfo();
+    const controller = new AbortController();
+    fetchPlanInfo(controller.signal);
+    return () => controller.abort();
   }, [user, isAdmin]);
 
   const canAnalyze = isAdmin || dailyLimit === null || dailyUsage < dailyLimit;
