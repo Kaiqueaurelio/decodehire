@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard } from "lucide-react";
+import { Check, CreditCard, Crown, Zap, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Plan {
@@ -11,13 +12,22 @@ interface Plan {
   name: string;
   plan_type: string;
   price: number;
-  analysis_limit: number | null;
+  daily_limit: number | null;
   description: string;
   features: string[];
 }
 
+const planIcons: Record<string, React.ReactNode> = {
+  free: <Zap className="w-6 h-6" />,
+  pro: <Sparkles className="w-6 h-6" />,
+  business: <Crown className="w-6 h-6" />,
+};
+
+const planOrder = ["free", "pro", "business"];
+
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const { planType: currentPlanType, loading: planLoading } = useUserPlan();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,62 +37,110 @@ export default function Plans() {
       .eq("is_active", true)
       .order("price")
       .then(({ data }) => {
-        setPlans(
-          (data || []).map((p: any) => ({
-            ...p,
-            features: Array.isArray(p.features) ? p.features : [],
-          }))
-        );
+        const mapped = (data || []).map((p: any) => ({
+          ...p,
+          features: Array.isArray(p.features) ? p.features : [],
+        }));
+        mapped.sort((a: Plan, b: Plan) => planOrder.indexOf(a.plan_type) - planOrder.indexOf(b.plan_type));
+        setPlans(mapped);
       });
   }, []);
 
+  const isCurrentPlan = (type: string) => currentPlanType === type;
+  const isUpgrade = (type: string) => {
+    const current = planOrder.indexOf(currentPlanType);
+    const target = planOrder.indexOf(type);
+    return target > current;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <h1 className="font-display text-2xl font-bold">Planos</h1>
-        <p className="text-muted-foreground text-sm mt-1">Escolha o melhor plano para suas necessidades</p>
+        <h1 className="font-display text-3xl font-bold">Escolha seu Plano</h1>
+        <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+          Comece gratuitamente e escale conforme suas necessidades crescem
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-        {plans.map((plan) => (
-          <Card key={plan.id} className={plan.plan_type === "pro" ? "border-primary shadow-lg" : ""}>
-            <CardHeader className="text-center">
-              {plan.plan_type === "pro" && (
-                <Badge className="w-fit mx-auto mb-2">Recomendado</Badge>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {plans.map((plan) => {
+          const isCurrent = isCurrentPlan(plan.plan_type);
+          const isPro = plan.plan_type === "pro";
+          const isBusiness = plan.plan_type === "business";
+
+          return (
+            <Card
+              key={plan.id}
+              className={`relative flex flex-col transition-all ${
+                isPro
+                  ? "border-primary shadow-lg scale-[1.02] ring-1 ring-primary/20"
+                  : isBusiness
+                    ? "border-accent shadow-md"
+                    : ""
+              }`}
+            >
+              {isPro && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1">
+                  Mais Popular
+                </Badge>
               )}
-              <CardTitle className="font-display">{plan.name}</CardTitle>
-              <div className="mt-2">
-                <span className="text-3xl font-display font-bold">
-                  {plan.price === 0 ? "Grátis" : `R$ ${plan.price.toFixed(2).replace(".", ",")}`}
-                </span>
-                {plan.price > 0 && <span className="text-muted-foreground text-sm">/mês</span>}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-success shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              {plan.plan_type === "pro" ? (
-                <Button className="w-full" onClick={() => navigate(`/checkout/${plan.id}`)}>
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Assinar Pro
-                </Button>
-              ) : (
-                <Button variant="outline" className="w-full" disabled>
-                  Plano Atual
-                </Button>
+              {isBusiness && (
+                <Badge variant="secondary" className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1">
+                  Máximo Poder
+                </Badge>
               )}
-            </CardFooter>
-          </Card>
-        ))}
+
+              <CardHeader className="text-center pt-8 pb-4">
+                <div className="mx-auto mb-3 p-3 rounded-full bg-primary/10 text-primary w-fit">
+                  {planIcons[plan.plan_type] || <Zap className="w-6 h-6" />}
+                </div>
+                <CardTitle className="font-display text-xl">{plan.name}</CardTitle>
+                <div className="mt-3">
+                  <span className="text-4xl font-display font-bold">
+                    {plan.price === 0 ? "Grátis" : `R$ ${plan.price.toFixed(2).replace(".", ",")}`}
+                  </span>
+                  {plan.price > 0 && <span className="text-muted-foreground text-sm">/mês</span>}
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                <div className="mt-3 text-sm font-medium text-primary">
+                  {plan.daily_limit === null ? "Análises ilimitadas" : `${plan.daily_limit} análises/dia`}
+                </div>
+              </CardHeader>
+
+              <CardContent className="flex-1">
+                <ul className="space-y-3">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm">
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+
+              <CardFooter className="pt-4">
+                {isCurrent ? (
+                  <Button variant="outline" className="w-full" disabled>
+                    Plano Atual
+                  </Button>
+                ) : isUpgrade(plan.plan_type) ? (
+                  <Button
+                    className="w-full"
+                    variant={isPro ? "default" : "default"}
+                    onClick={() => navigate(`/checkout/${plan.id}`)}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {plan.plan_type === "business" ? "Assinar Business" : "Assinar Pro"}
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="w-full" disabled>
+                    Incluído no seu plano
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -184,6 +184,7 @@ export type Database = {
         Row: {
           analysis_limit: number | null
           created_at: string
+          daily_limit: number | null
           description: string | null
           features: Json | null
           id: string
@@ -195,6 +196,7 @@ export type Database = {
         Insert: {
           analysis_limit?: number | null
           created_at?: string
+          daily_limit?: number | null
           description?: string | null
           features?: Json | null
           id?: string
@@ -206,6 +208,7 @@ export type Database = {
         Update: {
           analysis_limit?: number | null
           created_at?: string
+          daily_limit?: number | null
           description?: string | null
           features?: Json | null
           id?: string
@@ -277,6 +280,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_daily_usage: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -288,7 +292,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       payment_status: "pending" | "confirmed" | "rejected"
-      plan_type: "free" | "pro"
+      plan_type: "free" | "pro" | "business"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -418,7 +422,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       payment_status: ["pending", "confirmed", "rejected"],
-      plan_type: ["free", "pro"],
+      plan_type: ["free", "pro", "business"],
     },
   },
 } as const
