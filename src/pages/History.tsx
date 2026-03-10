@@ -5,7 +5,15 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Download, Lock, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { BarChart3, Download, Lock, FileText, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { exportAnalysisPdf } from "@/lib/exportPdf";
 
@@ -46,8 +54,11 @@ export default function History() {
   const { canExport } = useUserPlan();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [clearAllOpen, setClearAllOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  const fetchItems = () => {
     if (!user) return;
     supabase
       .from("analysis_results")
@@ -58,7 +69,39 @@ export default function History() {
         setItems((data as HistoryItem[]) || []);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchItems();
   }, [user]);
+
+  const handleDeleteOne = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("analysis_results").delete().eq("id", deleteId);
+    setDeleting(false);
+    setDeleteId(null);
+    if (error) {
+      toast.error("Erro ao excluir análise.");
+    } else {
+      setItems((prev) => prev.filter((i) => i.id !== deleteId));
+      toast.success("Análise excluída.");
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!user) return;
+    setDeleting(true);
+    const { error } = await supabase.from("analysis_results").delete().eq("user_id", user.id);
+    setDeleting(false);
+    setClearAllOpen(false);
+    if (error) {
+      toast.error("Erro ao limpar histórico.");
+    } else {
+      setItems([]);
+      toast.success("Histórico zerado.");
+    }
+  };
 
   const handleExportAll = () => {
     if (!canExport) {
@@ -86,21 +129,32 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="font-display text-2xl font-bold">Histórico de Análises</h1>
           <p className="text-muted-foreground text-sm mt-1">Suas análises anteriores</p>
         </div>
         {items.length > 0 && (
-          <Button
-            variant={canExport ? "outline" : "secondary"}
-            size="sm"
-            onClick={handleExportAll}
-            className="gap-2"
-          >
-            {canExport ? <Download className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-            Exportar Tudo
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setClearAllOpen(true)}
+              className="gap-2 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+              Zerar Histórico
+            </Button>
+            <Button
+              variant={canExport ? "outline" : "secondary"}
+              size="sm"
+              onClick={handleExportAll}
+              className="gap-2"
+            >
+              {canExport ? <Download className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              Exportar Tudo
+            </Button>
+          </div>
         )}
       </div>
 
@@ -137,19 +191,28 @@ export default function History() {
                         })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleExportSingle(item)}
-                          title={canExport ? "Exportar PDF" : "Disponível no plano Pro"}
-                        >
-                          {canExport ? (
-                            <FileText className="w-4 h-4" />
-                          ) : (
-                            <Lock className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteId(item.id)}
+                        title="Excluir análise"
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleExportSingle(item)}
+                        title={canExport ? "Exportar PDF" : "Disponível no plano Pro"}
+                      >
+                        {canExport ? (
+                          <FileText className="w-4 h-4" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </Button>
                       <Badge variant={isCompatible ? "default" : "destructive"}>
                         {r?.classificacao}
                       </Badge>
@@ -166,6 +229,45 @@ export default function History() {
           })}
         </div>
       )}
+
+      {/* Delete single confirmation */}
+      <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Excluir análise</DialogTitle>
+            <DialogDescription>Tem certeza que deseja excluir esta análise? Essa ação não pode ser desfeita.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDeleteOne} disabled={deleting}>
+              {deleting ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear all confirmation */}
+      <Dialog open={clearAllOpen} onOpenChange={setClearAllOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <DialogTitle className="font-display">Zerar histórico</DialogTitle>
+            </div>
+            <DialogDescription>
+              Isso excluirá <span className="font-semibold text-foreground">todas as {items.length} análises</span> do seu histórico. Essa ação é irreversível.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setClearAllOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleClearAll} disabled={deleting}>
+              {deleting ? "Excluindo..." : "Zerar Tudo"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
