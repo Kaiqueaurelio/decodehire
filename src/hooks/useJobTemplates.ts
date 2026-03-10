@@ -38,12 +38,16 @@ export function useJobTemplates() {
   useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
 
   const saveTemplate = async (name: string, parameters: JobParameters) => {
-    if (!user) return;
-    await supabase.from("job_templates").insert({
+    if (!user) throw new Error("Usuário não autenticado");
+    const { error } = await supabase.from("job_templates").insert({
       user_id: user.id,
       name,
       parameters: parameters as any,
     });
+    if (error) {
+      console.error("Erro ao salvar template:", error);
+      throw error;
+    }
     await fetchTemplates();
   };
 
