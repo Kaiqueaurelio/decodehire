@@ -124,6 +124,8 @@ export default function AppLayout() {
             <Link to="/about" className="hover:text-primary transition-colors">Sobre nós</Link>
             <span>•</span>
             <Link to="/terms" className="hover:text-primary transition-colors">Termos de uso</Link>
+            <span>•</span>
+            <Link to="/contact" className="hover:text-primary transition-colors">Contato</Link>
           </div>
           <p>© 2026 Decode Analytics — Criado por Kaique Aurélio</p>
         </footer>

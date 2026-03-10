@@ -17,11 +17,13 @@ import Checkout from "@/pages/Checkout";
 import Profile from "@/pages/Profile";
 import About from "@/pages/About";
 import Terms from "@/pages/Terms";
+import Contact from "@/pages/Contact";
 import PixConfig from "@/pages/admin/PixConfig";
 import PaymentReview from "@/pages/admin/PaymentReview";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminPlans from "@/pages/admin/AdminPlans";
+import AdminContacts from "@/pages/admin/AdminContacts";
 import AdminLayout from "@/components/layout/AdminLayout";
 import NotFound from "@/pages/NotFound";
 
@@ -42,6 +44,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/contact" element={<Contact />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/history" element={<History />} />
@@ -55,6 +58,7 @@ const App = () => (
               <Route path="/admin/plans" element={<AdminPlans />} />
               <Route path="/admin/payments/pix" element={<PixConfig />} />
               <Route path="/admin/payments/review" element={<PaymentReview />} />
+              <Route path="/admin/contacts" element={<AdminContacts />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
