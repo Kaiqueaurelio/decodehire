@@ -100,6 +100,9 @@ export default function PaymentReview() {
       return;
     }
 
+    // Find plan name for the notification
+    const planName = requests.find((r) => r.id === id)?.subscription_plans?.name || "plano";
+
     if (status === "confirmed") {
       // Deactivate any existing active subscriptions
       await supabase
@@ -115,8 +118,25 @@ export default function PaymentReview() {
         status: "active",
         started_at: new Date().toISOString(),
       });
+
+      // Notify user
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: "Pagamento confirmado ✅",
+        message: `Seu pagamento para o plano ${planName} foi aprovado! O plano já está ativo.`,
+        type: "payment_confirmed",
+      });
+
       toast.success("Pagamento confirmado e plano ativado!");
     } else {
+      // Notify user
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: "Pagamento recusado ❌",
+        message: `Seu pagamento para o plano ${planName} foi recusado. Entre em contato para mais informações.`,
+        type: "payment_rejected",
+      });
+
       toast.info("Pagamento rejeitado.");
     }
     fetchRequests();
