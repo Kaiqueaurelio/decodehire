@@ -101,7 +101,20 @@ export default function PaymentReview() {
     }
 
     if (status === "confirmed") {
-      await supabase.from("user_subscriptions").insert({ user_id: userId, plan_id: planId, status: "active" });
+      // Deactivate any existing active subscriptions
+      await supabase
+        .from("user_subscriptions")
+        .update({ status: "inactive" })
+        .eq("user_id", userId)
+        .eq("status", "active");
+
+      // Activate new subscription
+      await supabase.from("user_subscriptions").insert({
+        user_id: userId,
+        plan_id: planId,
+        status: "active",
+        started_at: new Date().toISOString(),
+      });
       toast.success("Pagamento confirmado e plano ativado!");
     } else {
       toast.info("Pagamento rejeitado.");
