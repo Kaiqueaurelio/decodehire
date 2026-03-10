@@ -17,6 +17,7 @@ import Checkout from "@/pages/Checkout";
 import Profile from "@/pages/Profile";
 import About from "@/pages/About";
 import Terms from "@/pages/Terms";
+import Contact from "@/pages/Contact";
 import PixConfig from "@/pages/admin/PixConfig";
 import PaymentReview from "@/pages/admin/PaymentReview";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
