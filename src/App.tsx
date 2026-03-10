@@ -42,11 +42,13 @@ const App = () => (
               <Route path="/history" element={<History />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/checkout/:planId" element={<Checkout />} />
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-              <Route path="/admin/plans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
-              <Route path="/admin/payments/pix" element={<AdminRoute><PixConfig /></AdminRoute>} />
-              <Route path="/admin/payments/review" element={<AdminRoute><PaymentReview /></AdminRoute>} />
+            </Route>
+            <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/plans" element={<AdminPlans />} />
+              <Route path="/admin/payments/pix" element={<PixConfig />} />
+              <Route path="/admin/payments/review" element={<PaymentReview />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
