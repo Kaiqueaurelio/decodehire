@@ -73,6 +73,12 @@ const plans = [
 ];
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
+
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
