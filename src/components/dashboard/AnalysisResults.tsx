@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Star, BarChart3, Loader2, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Star, BarChart3, Loader2, User, Download } from "lucide-react";
+import { exportAnalysisPdf } from "@/lib/exportPdf";
 
 export interface AnalysisResult {
   classificacao: string;
