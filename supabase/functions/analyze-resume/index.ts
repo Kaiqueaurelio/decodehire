@@ -27,15 +27,11 @@ ${JSON.stringify(parsedResume, null, 2)}
 
 PARÂMETROS DA VAGA:
 - Cargo: ${jobParameters.cargo}
-- Área: ${jobParameters.area}
-- Habilidades obrigatórias: ${jobParameters.habilidadesObrigatorias}
-- Habilidades desejáveis: ${jobParameters.habilidadesDesejaveis}
+- Descrição: ${jobParameters.descricao || "Não informada"}
 - Experiência mínima: ${jobParameters.experienciaMinima} anos
-- Responsabilidades: ${jobParameters.responsabilidades}
-- Formação: ${jobParameters.formacao}
-- Certificações: ${jobParameters.certificacoes}
-- Idiomas: ${jobParameters.idiomas}
-- Palavras-chave: ${jobParameters.palavrasChave}
+- Formação: ${jobParameters.formacao || "Não especificada"}
+- Certificações: ${jobParameters.certificacoes || "Não especificadas"}
+- Idiomas: ${jobParameters.idiomas || "Não especificados"}
 
 Analise:
 1. Compatibilidade de habilidades
@@ -57,9 +53,9 @@ Analise:
         messages: [
           {
             role: "system",
-            content: "Você é um especialista em RH e recrutamento. Avalie a compatibilidade entre currículo e vaga de forma objetiva e detalhada."
+            content: "Você é um especialista em RH e recrutamento. Avalie a compatibilidade entre currículo e vaga de forma objetiva e detalhada.",
           },
-          { role: "user", content: prompt }
+          { role: "user", content: prompt },
         ],
         tools: [
           {
@@ -73,41 +69,19 @@ Analise:
                   classificacao: {
                     type: "string",
                     enum: ["Perfil Compatível", "Perfil Não Compatível"],
-                    description: "Classificação geral"
                   },
-                  score: {
-                    type: "integer",
-                    description: "Score de compatibilidade de 0 a 100"
-                  },
-                  habilidades_compativeis: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Habilidades do candidato que são compatíveis com a vaga"
-                  },
-                  experiencia_relevante: {
-                    type: "string",
-                    description: "Resumo da experiência relevante"
-                  },
-                  diferenciais: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Diferenciais do candidato"
-                  },
-                  lacunas: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Requisitos da vaga não atendidos"
-                  },
-                  resumo: {
-                    type: "string",
-                    description: "Resumo interpretado do perfil profissional do candidato"
-                  }
+                  score: { type: "integer", description: "Score de 0 a 100" },
+                  habilidades_compativeis: { type: "array", items: { type: "string" } },
+                  experiencia_relevante: { type: "string" },
+                  diferenciais: { type: "array", items: { type: "string" } },
+                  lacunas: { type: "array", items: { type: "string" } },
+                  resumo: { type: "string" },
                 },
                 required: ["classificacao", "score", "habilidades_compativeis", "experiencia_relevante", "diferenciais", "lacunas", "resumo"],
-                additionalProperties: false
-              }
-            }
-          }
+                additionalProperties: false,
+              },
+            },
+          },
         ],
         tool_choice: { type: "function", function: { name: "analyze_compatibility" } },
       }),
@@ -116,12 +90,14 @@ Analise:
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       throw new Error("Erro ao analisar currículo");
@@ -129,9 +105,8 @@ Analise:
 
     const data = await response.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    
     if (!toolCall) throw new Error("Resposta inválida da IA");
-    
+
     const result = JSON.parse(toolCall.function.arguments);
 
     return new Response(JSON.stringify({ result }), {

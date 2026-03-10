@@ -9,9 +9,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { resumeText } = await req.json();
-    if (!resumeText) {
-      return new Response(JSON.stringify({ error: "Texto do currículo não fornecido" }), {
+    const { fileBase64, fileName, fileType } = await req.json();
+
+    if (!fileBase64) {
+      return new Response(JSON.stringify({ error: "Nenhum arquivo enviado" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -20,6 +21,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    // Single AI call: extract text from PDF + parse into structured JSON
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -27,23 +29,34 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content: "Você é um parser de currículos profissional. Analise o texto do currículo e extraia informações estruturadas."
+            content: "Você é um parser de currículos profissional. Receba o documento do currículo, extraia TODO o texto e estruture os dados em formato padronizado usando a função fornecida. Seja preciso e completo na extração.",
           },
           {
             role: "user",
-            content: `Analise o seguinte currículo e estruture os dados:\n\n${resumeText}`
-          }
+            content: [
+              {
+                type: "text",
+                text: `Extraia e estruture os dados deste currículo (arquivo: ${fileName}, tipo: ${fileType}). Analise o documento completo e retorne os dados estruturados.`,
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${fileType};base64,${fileBase64}`,
+                },
+              },
+            ],
+          },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "parse_resume",
-              description: "Estrutura os dados do currículo em formato padronizado",
+              description: "Estrutura os dados extraídos do currículo em formato padronizado",
               parameters: {
                 type: "object",
                 properties: {
@@ -57,11 +70,11 @@ serve(async (req) => {
                         cargo: { type: "string" },
                         empresa: { type: "string" },
                         periodo: { type: "string" },
-                        descricao: { type: "string" }
+                        descricao: { type: "string" },
                       },
                       required: ["cargo"],
-                      additionalProperties: false
-                    }
+                      additionalProperties: false,
+                    },
                   },
                   tempo_experiencia_total: { type: "string", description: "Tempo total estimado de experiência" },
                   habilidades_tecnicas: { type: "array", items: { type: "string" } },
@@ -71,27 +84,32 @@ serve(async (req) => {
                   idiomas: { type: "array", items: { type: "string" } },
                   ferramentas_tecnologias: { type: "array", items: { type: "string" } },
                   projetos_relevantes: { type: "array", items: { type: "string" } },
-                  palavras_chave: { type: "array", items: { type: "string" } }
+                  palavras_chave: { type: "array", items: { type: "string" } },
                 },
                 required: ["nome_candidato", "habilidades_tecnicas"],
-                additionalProperties: false
-              }
-            }
-          }
+                additionalProperties: false,
+              },
+            },
+          },
         ],
         tool_choice: { type: "function", function: { name: "parse_resume" } },
       }),
     });
 
     if (!response.ok) {
+      const errText = await response.text();
+      console.error("AI error:", response.status, errText);
+
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente em instantes." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       throw new Error("Erro ao processar currículo");
@@ -99,16 +117,16 @@ serve(async (req) => {
 
     const data = await response.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall) throw new Error("Resposta inválida da IA");
-    
+
     const parsed = JSON.parse(toolCall.function.arguments);
 
     return new Response(JSON.stringify({ parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("parse-resume error:", e);
+    console.error("process-resume error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

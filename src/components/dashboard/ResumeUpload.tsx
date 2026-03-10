@@ -6,14 +6,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
-  onTextExtracted: (text: string, fileName: string) => void;
+  onResumeProcessed: (parsed: any, fileName: string) => void;
   fileName: string;
   onAnalyze: () => void;
   analyzing: boolean;
   canAnalyze: boolean;
 }
 
-export function ResumeUpload({ onTextExtracted, fileName, onAnalyze, analyzing, canAnalyze }: Props) {
+export function ResumeUpload({ onResumeProcessed, fileName, onAnalyze, analyzing, canAnalyze }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -33,20 +33,20 @@ export function ResumeUpload({ onTextExtracted, fileName, onAnalyze, analyzing, 
 
     setUploading(true);
     try {
-      // Convert file to base64
       const buffer = await file.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
       );
 
-      const { data, error } = await supabase.functions.invoke("extract-text", {
+      // Single call: extract + parse in one step
+      const { data, error } = await supabase.functions.invoke("process-resume", {
         body: { fileBase64: base64, fileName: file.name, fileType: file.type },
       });
 
       if (error) throw error;
-      if (!data?.text) throw new Error("Texto não extraído");
+      if (!data?.parsed) throw new Error("Erro ao processar currículo");
 
-      onTextExtracted(data.text, file.name);
+      onResumeProcessed(data.parsed, file.name);
       toast.success("Currículo processado com sucesso!");
     } catch (err: any) {
       console.error(err);
@@ -80,11 +80,11 @@ export function ResumeUpload({ onTextExtracted, fileName, onAnalyze, analyzing, 
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              <p className="text-sm text-muted-foreground">Processando arquivo...</p>
+              <p className="text-sm text-muted-foreground">Processando currículo...</p>
             </div>
           ) : fileName ? (
             <div className="flex flex-col items-center gap-2">
-              <FileText className="w-8 h-8 text-success" />
+              <FileText className="w-8 h-8 text-primary" />
               <p className="text-sm font-medium text-foreground">{fileName}</p>
               <p className="text-xs text-muted-foreground">Clique para trocar o arquivo</p>
             </div>
