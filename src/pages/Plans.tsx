@@ -37,6 +37,7 @@ const planBadges: Record<string, { label: string; variant: "default" | "secondar
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const { planType: currentPlanType, loading: planLoading } = useUserPlan();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
