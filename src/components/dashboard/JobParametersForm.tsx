@@ -92,6 +92,34 @@ export function JobParametersForm({ onSave, savedParams }: Props) {
     toast.success("Template salvo com sucesso!");
   };
 
+  const handleGenerateDescription = async () => {
+    if (!params.cargo.trim()) {
+      toast.error("Informe o cargo antes de gerar a descrição.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-job-description", {
+        body: {
+          cargo: params.cargo,
+          formacao: params.formacao,
+          experienciaMinima: params.experienciaMinima,
+          certificacoes: params.certificacoes,
+          idiomas: params.idiomas,
+        },
+      });
+      if (error) throw error;
+      if (data?.description) {
+        update("descricao", data.description);
+        toast.success("Descrição gerada com sucesso!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar descrição");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleDeleteTemplate = async (id: string) => {
     await deleteTemplate(id);
     if (selectedTemplateId === id) {
