@@ -46,11 +46,37 @@ export default function PaymentReview() {
   } | null>(null);
 
   const fetchRequests = async () => {
-    const { data } = await supabase
+    // Fetch payment requests
+    const { data: payments } = await supabase
       .from("payment_requests")
-      .select("*, profiles:user_id(email, full_name), subscription_plans:plan_id(name)")
+      .select("*")
       .order("created_at", { ascending: false });
-    setRequests((data as any) || []);
+
+    if (!payments || payments.length === 0) {
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch profiles and plans separately to avoid FK join issues
+    const userIds = [...new Set(payments.map((p) => p.user_id))];
+    const planIds = [...new Set(payments.map((p) => p.plan_id))];
+
+    const [profilesRes, plansRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, email, full_name").in("user_id", userIds),
+      supabase.from("subscription_plans").select("id, name").in("id", planIds),
+    ]);
+
+    const profilesMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p]));
+    const plansMap = new Map((plansRes.data || []).map((p) => [p.id, p]));
+
+    const enriched = payments.map((req) => ({
+      ...req,
+      profiles: profilesMap.get(req.user_id) || null,
+      subscription_plans: plansMap.get(req.plan_id) || null,
+    }));
+
+    setRequests(enriched as any);
     setLoading(false);
   };
 
@@ -75,7 +101,20 @@ export default function PaymentReview() {
     }
 
     if (status === "confirmed") {
-      await supabase.from("user_subscriptions").insert({ user_id: userId, plan_id: planId, status: "active" });
+      // Deactivate any existing active subscriptions
+      await supabase
+        .from("user_subscriptions")
+        .update({ status: "inactive" })
+        .eq("user_id", userId)
+        .eq("status", "active");
+
+      // Activate new subscription
+      await supabase.from("user_subscriptions").insert({
+        user_id: userId,
+        plan_id: planId,
+        status: "active",
+        started_at: new Date().toISOString(),
+      });
       toast.success("Pagamento confirmado e plano ativado!");
     } else {
       toast.info("Pagamento rejeitado.");
