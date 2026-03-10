@@ -1,8 +1,9 @@
 import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
-import { BarChart3, CreditCard, LogOut, Shield, Menu, X, User, Info, FileText as FileTextIcon } from "lucide-react";
+import { BarChart3, CreditCard, LogOut, Shield, Menu, X, User, Info, FileText as FileTextIcon, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo.jpeg";
@@ -16,6 +17,7 @@ const navItems = [
 
 export default function AppLayout() {
   const { user, isAdmin, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -77,10 +79,18 @@ export default function AppLayout() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="text-xs text-sidebar-foreground/60 mb-3 px-3 truncate">
+        <div className="p-4 border-t border-sidebar-border space-y-2">
+          <div className="text-xs text-sidebar-foreground/60 mb-2 px-3 truncate">
             {user?.email}
           </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+            {theme === "dark" ? "Modo claro" : "Modo escuro"}
+          </Button>
           <Button
             variant="ghost"
             className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
