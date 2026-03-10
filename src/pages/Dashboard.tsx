@@ -24,6 +24,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { dailyLimit, dailyUsage, canAnalyze, loading: planLoading, refresh } = useUserPlan();
   const [jobParams, setJobParams] = useState<JobParameters | null>(null);
+
+  const handleSetJobParams = (params: JobParameters) => {
+    setJobParams(params);
+    localStorage.setItem("__batch_job_params", JSON.stringify(params));
+  };
   const [parsedResume, setParsedResume] = useState<any>(null);
   const [resumeFileName, setResumeFileName] = useState<string>("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
