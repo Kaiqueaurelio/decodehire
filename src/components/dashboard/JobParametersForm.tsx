@@ -13,9 +13,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Briefcase, Save, ChevronDown, BookmarkPlus, Trash2 } from "lucide-react";
+import { Briefcase, Save, ChevronDown, BookmarkPlus, Trash2, Wand2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useJobTemplates } from "@/hooks/useJobTemplates";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface JobParameters {
   cargo: string;
