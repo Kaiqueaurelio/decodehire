@@ -1,8 +1,9 @@
 import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
-import { BarChart3, CreditCard, LogOut, Shield, Menu, X, User, Info, FileText as FileTextIcon } from "lucide-react";
+import { BarChart3, CreditCard, LogOut, Shield, Menu, X, User, Info, FileText as FileTextIcon, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo.jpeg";
