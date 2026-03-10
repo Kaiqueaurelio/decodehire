@@ -83,6 +83,31 @@ export default function About() {
           </Card>
         </div>
 
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <h2 className="font-display text-xl font-semibold mb-3 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Entre em Contato
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Tem alguma dúvida ou quer saber mais sobre nossos serviços? Fale conosco!
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/contact">
+                <Button variant="outline" size="sm">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Página de Contato
+                </Button>
+              </Link>
+              <a href="mailto:Decoanalytics@outlook.com.br">
+                <Button variant="ghost" size="sm">
+                  Decoanalytics@outlook.com.br
+                </Button>
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="text-center mt-12">
           <p className="text-xs text-muted-foreground">
             © 2026 Decode Analytics — Criado por Kaique Aurélio

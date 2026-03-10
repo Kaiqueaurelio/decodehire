@@ -21,6 +21,7 @@ const adminItems = [
   { to: "/admin/plans", icon: Package, label: "Planos" },
   { to: "/admin/payments/review", icon: Shield, label: "Pagamentos" },
   { to: "/admin/payments/pix", icon: Settings, label: "Config Pix" },
+  { to: "/admin/contacts", icon: MessageSquare, label: "Mensagens" },
 ];
 
 export default function AdminLayout() {
