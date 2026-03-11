@@ -81,6 +81,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <OnboardingOverlay />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Análise de Currículos</h1>
