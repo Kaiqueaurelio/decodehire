@@ -229,26 +229,39 @@ export function ResumeUpload({ onResumeProcessed, fileName, onAnalyze, analyzing
   );
 }
 
+function exportRankingCsv(results: { fileName: string; score: number; result: any }[]) {
+  const headers = ["Posição", "Arquivo", "Score", "Classificação", "Resumo"];
+  const rows = results.map((r, i) => [
+    i + 1,
+    r.fileName,
+    r.score,
+    r.result?.classificacao || "",
+    (r.result?.resumo || "").replace(/"/g, '""'),
+  ]);
+  const csv = [headers.join(","), ...rows.map((r) => r.map((v: any) => `"${v}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ranking-candidatos.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+type RankingFilter = "all" | "compatible" | "incompatible";
+
 // Batch analyze button component
 function BatchAnalyzeButton({ files, canAnalyze }: { files: ParsedFile[]; canAnalyze: boolean }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<{ fileName: string; score: number; result: any }[]>([]);
   const [progress, setProgress] = useState(0);
-
-  const handleBatchAnalyze = async () => {
-    // We need jobParams from context - use a simple approach: get from localStorage or parent
-    // For now, we read from the DOM... actually let's use a different approach
-    // The batch analysis needs job parameters. We'll read them from the page state.
-    toast.error("Salve os parâmetros da vaga primeiro, depois clique em analisar.");
-    // The actual analysis is handled below
-  };
+  const [rankingFilter, setRankingFilter] = useState<RankingFilter>("all");
 
   const runBatch = async () => {
     setAnalyzing(true);
     setResults([]);
     setProgress(0);
 
-    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Faça login."); setAnalyzing(false); return; }
 
@@ -282,21 +295,24 @@ function BatchAnalyzeButton({ files, canAnalyze }: { files: ParsedFile[]; canAna
       setProgress(((i + 1) / files.length) * 100);
     }
 
-    // Sort by score descending
     batchResults.sort((a, b) => b.score - a.score);
     setResults(batchResults);
     setAnalyzing(false);
     toast.success(`${batchResults.length} análise(s) concluída(s)!`);
   };
 
+  const isCompatible = (r: any) =>
+    r?.classificacao?.toLowerCase().includes("compatível") && !r?.classificacao?.toLowerCase().includes("não");
+
+  const filteredResults = results.filter((r) => {
+    if (rankingFilter === "compatible") return isCompatible(r.result);
+    if (rankingFilter === "incompatible") return !isCompatible(r.result);
+    return true;
+  });
+
   return (
     <div className="space-y-4">
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={runBatch}
-        disabled={!canAnalyze || analyzing}
-      >
+      <Button className="w-full" size="lg" onClick={runBatch} disabled={!canAnalyze || analyzing}>
         {analyzing ? (
           <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analisando {files.length} currículo(s)...</>
         ) : (
@@ -306,27 +322,56 @@ function BatchAnalyzeButton({ files, canAnalyze }: { files: ParsedFile[]; canAna
 
       {analyzing && <Progress value={progress} className="h-2" />}
 
-      {/* Ranking results */}
+      {/* Enhanced Ranking */}
       {results.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-display font-semibold text-sm flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-[hsl(40,90%,50%)]" />
-            Ranking de Candidatos
-          </h3>
+        <div className="space-y-3 animate-fade-in">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="font-display font-semibold text-sm flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-[hsl(40,90%,50%)]" />
+              Ranking de Candidatos
+            </h3>
+            <div className="flex gap-1.5">
+              {(["all", "compatible", "incompatible"] as RankingFilter[]).map((f) => (
+                <Button
+                  key={f}
+                  variant={rankingFilter === f ? "default" : "outline"}
+                  size="sm"
+                  className="text-[10px] h-7 px-2"
+                  onClick={() => setRankingFilter(f)}
+                >
+                  {f === "all" ? "Todos" : f === "compatible" ? "Compatíveis" : "Incompatíveis"}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2">
-            {results.map((r, i) => {
-              const isCompatible = r.result?.classificacao?.toLowerCase().includes("compatível") && !r.result?.classificacao?.toLowerCase().includes("não");
+            {filteredResults.map((r, i) => {
+              const originalIndex = results.indexOf(r);
+              const isBest = originalIndex === 0;
               return (
-                <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2.5">
-                  <span className={`font-display font-bold text-lg w-8 text-center ${i === 0 ? "text-[hsl(40,90%,50%)]" : i === 1 ? "text-muted-foreground" : "text-muted-foreground/60"}`}>
-                    #{i + 1}
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
+                    isBest
+                      ? "bg-[hsl(40,90%,50%)]/10 ring-1 ring-[hsl(40,90%,50%)]/30"
+                      : "bg-muted/50"
+                  }`}
+                >
+                  <span className={`font-display font-bold text-lg w-8 text-center shrink-0 ${
+                    originalIndex === 0 ? "text-[hsl(40,90%,50%)]" : originalIndex === 1 ? "text-muted-foreground" : "text-muted-foreground/60"
+                  }`}>
+                    {isBest ? "🏆" : `#${originalIndex + 1}`}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{r.fileName}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{r.result?.resumo}</p>
+                    <div className="mt-1.5">
+                      <Progress value={r.score} className="h-1.5" />
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{r.result?.resumo}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={isCompatible ? "default" : "destructive"} className="text-xs hidden sm:inline-flex">
+                    <Badge variant={isCompatible(r.result) ? "default" : "destructive"} className="text-xs hidden sm:inline-flex">
                       {r.result?.classificacao}
                     </Badge>
                     <span className={`font-display font-bold ${r.score >= 70 ? "text-[hsl(160,60%,45%)]" : r.score >= 40 ? "text-[hsl(40,90%,50%)]" : "text-destructive"}`}>
@@ -337,6 +382,17 @@ function BatchAnalyzeButton({ files, canAnalyze }: { files: ParsedFile[]; canAna
               );
             })}
           </div>
+
+          {/* Export CSV */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2 text-xs"
+            onClick={() => exportRankingCsv(results)}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Exportar Ranking em CSV
+          </Button>
         </div>
       )}
     </div>
