@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { MetricsDashboard } from "@/components/dashboard/MetricsDashboard";
+import { OnboardingOverlay } from "@/components/dashboard/OnboardingOverlay";
 
 export default function Dashboard() {
   const { user } = useAuth();
