@@ -7,7 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +28,7 @@ import {
 import {
   BarChart3, Download, Lock, FileText, Trash2, AlertTriangle,
   Eye, CheckCircle, XCircle, Star, User, GitCompareArrows,
+  Search, Heart, ArrowUpDown, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportAnalysisPdf } from "@/lib/exportPdf";
@@ -26,6 +36,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Legend,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 interface HistoryItem {
   id: string;
@@ -33,7 +44,12 @@ interface HistoryItem {
   result: any;
   job_parameters: any;
   created_at: string;
+  is_favorited: boolean;
 }
+
+type ScoreFilter = "all" | "high" | "medium" | "low";
+type SortBy = "date" | "score";
+type FilterTab = "all" | "favorites";
 
 function exportToCsv(items: HistoryItem[], filename: string) {
   const headers = ["Cargo", "Score", "Classificação", "Resumo", "Data"];
@@ -58,13 +74,11 @@ function exportToCsv(items: HistoryItem[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-// Helper to extract radar metrics from a result
 function getRadarMetrics(r: any) {
   const skills = r?.habilidades_compativeis?.length ?? 0;
   const gaps = r?.lacunas?.length ?? 0;
   const diffs = r?.diferenciais?.length ?? 0;
   const score = r?.score ?? 0;
-
   return {
     "Score Geral": score,
     "Habilidades": Math.min(skills * 15, 100),
@@ -105,7 +119,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4 pb-4">
-            {/* Score */}
             <div className="flex items-center justify-between">
               <Badge variant={isCompatible ? "default" : "destructive"} className="text-sm px-3 py-1">
                 {r?.classificacao}
@@ -116,7 +129,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
             </div>
             <Progress value={item.score} className="h-3" />
 
-            {/* Summary */}
             {r?.resumo && (
               <Card>
                 <CardContent className="pt-4">
@@ -128,7 +140,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
               </Card>
             )}
 
-            {/* Skills */}
             {r?.habilidades_compativeis?.length > 0 && (
               <Card>
                 <CardContent className="pt-4">
@@ -144,7 +155,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
               </Card>
             )}
 
-            {/* Experience */}
             {r?.experiencia_relevante && (
               <Card>
                 <CardContent className="pt-4">
@@ -156,7 +166,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
               </Card>
             )}
 
-            {/* Differentials */}
             {r?.diferenciais?.length > 0 && (
               <Card>
                 <CardContent className="pt-4">
@@ -174,7 +183,6 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
               </Card>
             )}
 
-            {/* Gaps */}
             {r?.lacunas?.length > 0 && (
               <Card>
                 <CardContent className="pt-4">
@@ -199,17 +207,8 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
 }
 
 // ─── Comparison Dialog ───
-function ComparisonDialog({
-  items,
-  open,
-  onClose,
-}: {
-  items: HistoryItem[];
-  open: boolean;
-  onClose: () => void;
-}) {
+function ComparisonDialog({ items, open, onClose }: { items: HistoryItem[]; open: boolean; onClose: () => void }) {
   if (items.length < 2) return null;
-
   const metrics = Object.keys(getRadarMetrics(items[0].result));
   const radarData = metrics.map((metric) => {
     const entry: any = { metric };
@@ -220,7 +219,6 @@ function ComparisonDialog({
     });
     return entry;
   });
-
   const candidateKeys = Object.keys(radarData[0]).filter((k) => k !== "metric");
 
   return (
@@ -231,13 +229,10 @@ function ComparisonDialog({
             <GitCompareArrows className="w-5 h-5 text-primary" />
             Comparação de Candidatos
           </DialogTitle>
-          <DialogDescription>
-            Comparando {items.length} análises lado a lado
-          </DialogDescription>
+          <DialogDescription>Comparando {items.length} análises lado a lado</DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-6 pb-4">
-            {/* Radar Chart */}
             <Card>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
@@ -246,44 +241,28 @@ function ComparisonDialog({
                     <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11 }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
                     {candidateKeys.map((key, i) => (
-                      <Radar
-                        key={key}
-                        name={key}
-                        dataKey={key}
-                        stroke={RADAR_COLORS[i % RADAR_COLORS.length]}
-                        fill={RADAR_COLORS[i % RADAR_COLORS.length]}
-                        fillOpacity={0.15}
-                        strokeWidth={2}
-                      />
+                      <Radar key={key} name={key} dataKey={key} stroke={RADAR_COLORS[i % RADAR_COLORS.length]} fill={RADAR_COLORS[i % RADAR_COLORS.length]} fillOpacity={0.15} strokeWidth={2} />
                     ))}
                     <Legend />
                   </RadarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            {/* Side-by-side cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {items.map((item, i) => {
                 const r = item.result as any;
                 const jp = item.job_parameters as any;
                 const isCompatible = r?.classificacao?.toLowerCase().includes("compatível") && !r?.classificacao?.toLowerCase().includes("não");
                 const scoreColor = item.score >= 70 ? "text-[hsl(160,60%,45%)]" : item.score >= 40 ? "text-[hsl(40,90%,50%)]" : "text-destructive";
-
                 return (
                   <Card key={item.id} className="border-l-4" style={{ borderLeftColor: RADAR_COLORS[i % RADAR_COLORS.length] }}>
                     <CardContent className="pt-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="font-display font-semibold text-sm">{jp?.cargo || "Candidato"}</p>
-                        <span className={`text-2xl font-display font-bold ${scoreColor}`}>
-                          {item.score}<span className="text-xs text-muted-foreground">/100</span>
-                        </span>
+                        <span className={`text-2xl font-display font-bold ${scoreColor}`}>{item.score}<span className="text-xs text-muted-foreground">/100</span></span>
                       </div>
-                      <Badge variant={isCompatible ? "default" : "destructive"} className="text-xs">
-                        {r?.classificacao}
-                      </Badge>
+                      <Badge variant={isCompatible ? "default" : "destructive"} className="text-xs">{r?.classificacao}</Badge>
                       <p className="text-xs text-muted-foreground line-clamp-3">{r?.resumo}</p>
-
                       {r?.habilidades_compativeis?.length > 0 && (
                         <div>
                           <p className="text-xs font-medium mb-1">Habilidades ({r.habilidades_compativeis.length})</p>
@@ -291,13 +270,10 @@ function ComparisonDialog({
                             {r.habilidades_compativeis.slice(0, 5).map((h: string, j: number) => (
                               <Badge key={j} variant="secondary" className="text-[10px]">{h}</Badge>
                             ))}
-                            {r.habilidades_compativeis.length > 5 && (
-                              <Badge variant="outline" className="text-[10px]">+{r.habilidades_compativeis.length - 5}</Badge>
-                            )}
+                            {r.habilidades_compativeis.length > 5 && <Badge variant="outline" className="text-[10px]">+{r.habilidades_compativeis.length - 5}</Badge>}
                           </div>
                         </div>
                       )}
-
                       {r?.lacunas?.length > 0 && (
                         <div>
                           <p className="text-xs font-medium mb-1 text-destructive">Lacunas ({r.lacunas.length})</p>
@@ -322,10 +298,33 @@ function ComparisonDialog({
   );
 }
 
+// ─── Skeleton Loader ───
+function HistorySkeleton() {
+  return (
+    <div className="grid gap-3">
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i}>
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-5 h-5 rounded" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <Skeleton className="h-6 w-16" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 // ─── Main History Component ───
 export default function History() {
   const { user } = useAuth();
   const { canExport } = useUserPlan();
+  const navigate = useNavigate();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -334,6 +333,12 @@ export default function History() {
   const [previewItem, setPreviewItem] = useState<HistoryItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
+
+  // New filter/search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTab, setFilterTab] = useState<FilterTab>("all");
+  const [scoreFilter, setScoreFilter] = useState<ScoreFilter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("date");
 
   const fetchItems = () => {
     if (!user) return;
@@ -349,6 +354,43 @@ export default function History() {
   };
 
   useEffect(() => { fetchItems(); }, [user]);
+
+  // Toggle favorite
+  const toggleFavorite = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    const newVal = !item.is_favorited;
+    // Optimistic update
+    setItems((prev) => prev.map((i) => i.id === id ? { ...i, is_favorited: newVal } : i));
+    const { error } = await supabase
+      .from("analysis_results")
+      .update({ is_favorited: newVal } as any)
+      .eq("id", id);
+    if (error) {
+      setItems((prev) => prev.map((i) => i.id === id ? { ...i, is_favorited: !newVal } : i));
+      toast.error("Erro ao atualizar favorito.");
+    }
+  };
+
+  // Filter and sort
+  const filteredItems = items
+    .filter((item) => {
+      if (filterTab === "favorites" && !item.is_favorited) return false;
+      if (scoreFilter === "high" && item.score < 70) return false;
+      if (scoreFilter === "medium" && (item.score < 40 || item.score >= 70)) return false;
+      if (scoreFilter === "low" && item.score >= 40) return false;
+      if (searchQuery) {
+        const jp = item.job_parameters as any;
+        const cargo = (jp?.cargo || "").toLowerCase();
+        if (!cargo.includes(searchQuery.toLowerCase())) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "score") return b.score - a.score;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -413,46 +455,128 @@ export default function History() {
   };
 
   const comparedItems = items.filter((i) => selectedIds.has(i.id));
+  const favoritesCount = items.filter((i) => i.is_favorited).length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="font-display text-2xl font-bold">Histórico de Análises</h1>
-          <p className="text-muted-foreground text-sm mt-1">Clique em uma análise para ver detalhes. Selecione para comparar.</p>
+          <p className="text-muted-foreground text-sm mt-1 hidden sm:block">Clique em uma análise para ver detalhes. Selecione para comparar.</p>
         </div>
         {items.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {selectedIds.size >= 2 && (
               <Button size="sm" onClick={handleCompare} className="gap-2">
                 <GitCompareArrows className="w-4 h-4" />
-                Comparar ({selectedIds.size})
+                <span className="hidden sm:inline">Comparar</span> ({selectedIds.size})
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={() => setClearAllOpen(true)} className="gap-2 text-destructive hover:text-destructive">
               <Trash2 className="w-4 h-4" />
-              Zerar
+              <span className="hidden sm:inline">Zerar</span>
             </Button>
             <Button variant={canExport ? "outline" : "secondary"} size="sm" onClick={handleExportAll} className="gap-2">
               {canExport ? <Download className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              Exportar
+              <span className="hidden sm:inline">Exportar</span>
             </Button>
           </div>
         )}
       </div>
 
+      {/* Filters Bar */}
+      {items.length > 0 && (
+        <div className="space-y-3 animate-fade-in">
+          {/* Tab filters */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={filterTab === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterTab("all")}
+              className="text-xs gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Todas ({items.length})
+            </Button>
+            <Button
+              variant={filterTab === "favorites" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterTab("favorites")}
+              className="text-xs gap-1.5"
+            >
+              <Heart className="w-3.5 h-3.5" />
+              Favoritas ({favoritesCount})
+            </Button>
+          </div>
+
+          {/* Search + Score filter + Sort */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por cargo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
+              />
+            </div>
+            <Select value={scoreFilter} onValueChange={(v) => setScoreFilter(v as ScoreFilter)}>
+              <SelectTrigger className="w-full sm:w-[150px] h-9 text-xs">
+                <SelectValue placeholder="Score" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos scores</SelectItem>
+                <SelectItem value="high">Alto (70-100)</SelectItem>
+                <SelectItem value="medium">Médio (40-69)</SelectItem>
+                <SelectItem value="low">Baixo (0-39)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
+              <SelectTrigger className="w-full sm:w-[140px] h-9 text-xs">
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Mais recentes</SelectItem>
+                <SelectItem value="score">Maior score</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+        <HistorySkeleton />
       ) : items.length === 0 ? (
+        /* Enhanced empty state */
+        <Card className="text-center py-16">
+          <CardContent className="space-y-4">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto animate-pulse">
+              <Sparkles className="w-10 h-10 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-display font-semibold text-foreground">Nenhuma análise ainda</p>
+              <p className="text-sm text-muted-foreground mt-1">Faça sua primeira análise de currículo e ela aparecerá aqui</p>
+            </div>
+            <Button onClick={() => navigate("/dashboard")} className="gap-2 mt-2">
+              <Sparkles className="w-4 h-4" />
+              Fazer Primeira Análise
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredItems.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
-            <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">Nenhuma análise realizada ainda</p>
+            <Search className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground">Nenhuma análise encontrada com esses filtros</p>
+            <Button variant="ghost" size="sm" className="mt-2" onClick={() => { setSearchQuery(""); setScoreFilter("all"); setFilterTab("all"); }}>
+              Limpar filtros
+            </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-3">
-          {items.map((item) => {
+          {filteredItems.map((item, index) => {
             const r = item.result as any;
             const jp = item.job_parameters as any;
             const isCompatible = r?.classificacao?.toLowerCase().includes("compatível") && !r?.classificacao?.toLowerCase().includes("não");
@@ -461,15 +585,13 @@ export default function History() {
             return (
               <Card
                 key={item.id}
-                className={`animate-fade-in cursor-pointer transition-all hover:shadow-md ${isSelected ? "ring-2 ring-primary" : ""}`}
+                className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? "ring-2 ring-primary" : ""}`}
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => setPreviewItem(item)}
               >
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="shrink-0"
-                      onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
-                    >
+                    <div className="shrink-0" onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}>
                       <Checkbox checked={isSelected} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -480,12 +602,21 @@ export default function History() {
                         })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                      {/* Favorite button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 transition-colors ${item.is_favorited ? "text-[hsl(40,90%,50%)]" : "text-muted-foreground hover:text-[hsl(40,90%,50%)]"}`}
+                        onClick={(e) => toggleFavorite(item.id, e)}
+                      >
+                        <Heart className={`w-3.5 h-3.5 ${item.is_favorited ? "fill-current" : ""}`} />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         onClick={(e) => { e.stopPropagation(); setDeleteId(item.id); }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex"
                         onClick={(e) => { e.stopPropagation(); handleExportSingle(item); }}>
                         {canExport ? <FileText className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
                       </Button>
@@ -505,10 +636,7 @@ export default function History() {
         </div>
       )}
 
-      {/* Detail preview */}
       <DetailDialog item={previewItem} open={!!previewItem} onClose={() => setPreviewItem(null)} />
-
-      {/* Comparison */}
       <ComparisonDialog items={comparedItems} open={compareOpen} onClose={() => setCompareOpen(false)} />
 
       {/* Delete single */}

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { MetricsDashboard } from "@/components/dashboard/MetricsDashboard";
+import { OnboardingOverlay } from "@/components/dashboard/OnboardingOverlay";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -80,6 +81,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <OnboardingOverlay />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Análise de Currículos</h1>

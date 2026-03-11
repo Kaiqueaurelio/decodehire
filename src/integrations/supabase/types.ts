@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_favorited: boolean
           job_parameters: Json
           result: Json
           resume_id: string | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_favorited?: boolean
           job_parameters: Json
           result: Json
           resume_id?: string | null
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_favorited?: boolean
           job_parameters?: Json
           result?: Json
           resume_id?: string | null
