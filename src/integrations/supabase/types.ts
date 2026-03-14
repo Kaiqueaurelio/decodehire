@@ -178,6 +178,7 @@ export type Database = {
           created_at: string
           id: string
           plan_id: string
+          receipt_url: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["payment_status"]
@@ -188,6 +189,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan_id: string
+          receipt_url?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
@@ -198,6 +200,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan_id?: string
+          receipt_url?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["payment_status"]

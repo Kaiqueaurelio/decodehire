@@ -16,8 +16,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Shield } from "lucide-react";
+import { CheckCircle, XCircle, Shield, Image, ExternalLink } from "lucide-react";
 
 interface PaymentRequest {
   id: string;
@@ -26,6 +32,7 @@ interface PaymentRequest {
   amount: number;
   status: string;
   created_at: string;
+  receipt_url?: string | null;
   profiles?: { email: string; full_name: string } | null;
   subscription_plans?: { name: string } | null;
 }
@@ -37,6 +44,7 @@ export default function PaymentReview() {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [receiptDialog, setReceiptDialog] = useState<{ open: boolean; url: string; userName: string } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     id: string;
@@ -46,7 +54,6 @@ export default function PaymentReview() {
   } | null>(null);
 
   const fetchRequests = async () => {
-    // Fetch payment requests
     const { data: payments } = await supabase
       .from("payment_requests")
       .select("*")
@@ -58,7 +65,6 @@ export default function PaymentReview() {
       return;
     }
 
-    // Fetch profiles and plans separately to avoid FK join issues
     const userIds = [...new Set(payments.map((p) => p.user_id))];
     const planIds = [...new Set(payments.map((p) => p.plan_id))];
 
@@ -89,6 +95,15 @@ export default function PaymentReview() {
     return requests.filter((r) => r.status === statusFilter);
   }, [requests, statusFilter]);
 
+  const handleViewReceipt = async (receiptPath: string, userName: string) => {
+    const { data } = await supabase.storage.from("receipts").createSignedUrl(receiptPath, 300);
+    if (data?.signedUrl) {
+      setReceiptDialog({ open: true, url: data.signedUrl, userName });
+    } else {
+      toast.error("Erro ao carregar comprovante");
+    }
+  };
+
   const handleAction = async (id: string, status: "confirmed" | "rejected", userId: string, planId: string) => {
     const { error } = await supabase
       .from("payment_requests")
@@ -100,18 +115,15 @@ export default function PaymentReview() {
       return;
     }
 
-    // Find plan name for the notification
     const planName = requests.find((r) => r.id === id)?.subscription_plans?.name || "plano";
 
     if (status === "confirmed") {
-      // Deactivate any existing active subscriptions
       await supabase
         .from("user_subscriptions")
         .update({ status: "inactive" })
         .eq("user_id", userId)
         .eq("status", "active");
 
-      // Activate new subscription
       await supabase.from("user_subscriptions").insert({
         user_id: userId,
         plan_id: planId,
@@ -119,7 +131,6 @@ export default function PaymentReview() {
         started_at: new Date().toISOString(),
       });
 
-      // Notify user
       await supabase.from("notifications").insert({
         user_id: userId,
         title: "Pagamento confirmado ✅",
@@ -129,7 +140,6 @@ export default function PaymentReview() {
 
       toast.success("Pagamento confirmado e plano ativado!");
     } else {
-      // Notify user
       await supabase.from("notifications").insert({
         user_id: userId,
         title: "Pagamento recusado ❌",
@@ -209,6 +219,7 @@ export default function PaymentReview() {
                     <TableHead>Usuário</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Valor</TableHead>
+                    <TableHead>Comprovante</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
@@ -225,6 +236,23 @@ export default function PaymentReview() {
                       </TableCell>
                       <TableCell>{(req.subscription_plans as any)?.name || "—"}</TableCell>
                       <TableCell>R$ {Number(req.amount).toFixed(2).replace(".", ",")}</TableCell>
+                      <TableCell>
+                        {req.receipt_url ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
+                            onClick={() =>
+                              handleViewReceipt(req.receipt_url!, (req.profiles as any)?.full_name || "Usuário")
+                            }
+                          >
+                            <Image className="w-3.5 h-3.5" />
+                            Ver
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Não enviado</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm">
                         {new Date(req.created_at).toLocaleDateString("pt-BR", {
                           day: "2-digit",
@@ -269,6 +297,39 @@ export default function PaymentReview() {
           )}
         </CardContent>
       </Card>
+
+      {/* Receipt Viewer Dialog */}
+      <Dialog open={!!receiptDialog?.open} onOpenChange={(open) => !open && setReceiptDialog(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Image className="w-5 h-5" />
+              Comprovante — {receiptDialog?.userName}
+            </DialogTitle>
+          </DialogHeader>
+          {receiptDialog?.url && (
+            <div className="space-y-4">
+              {receiptDialog.url.match(/\.pdf/i) ? (
+                <div className="text-center space-y-3 py-4">
+                  <p className="text-sm text-muted-foreground">Comprovante em PDF</p>
+                  <Button asChild variant="outline">
+                    <a href={receiptDialog.url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      Abrir PDF
+                    </a>
+                  </Button>
+                </div>
+              ) : (
+                <img
+                  src={receiptDialog.url}
+                  alt="Comprovante de pagamento"
+                  className="w-full rounded-lg border border-border"
+                />
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={!!confirmDialog?.open} onOpenChange={(open) => !open && setConfirmDialog(null)}>
