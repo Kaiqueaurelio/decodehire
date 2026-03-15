@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -14,9 +14,45 @@ import {
   Code2,
 } from "lucide-react";
 
+const TABS_ORDER = ["params", "upload", "result"] as const;
+const CYCLE_MS = 4000;
+const TICK_MS = 40;
+const STEP = 100 / (CYCLE_MS / TICK_MS);
+
 export default function AppDemo() {
   const [activeTab, setActiveTab] = useState("params");
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(null);
 
+  const advanceTab = useCallback(() => {
+    setActiveTab((prev) => {
+      const idx = TABS_ORDER.indexOf(prev as any);
+      return TABS_ORDER[(idx + 1) % TABS_ORDER.length];
+    });
+    setProgress(0);
+  }, []);
+
+  useEffect(() => {
+    if (paused) return;
+    intervalRef.current = setInterval(() => {
+      setProgress((p) => {
+        if (p + STEP >= 100) {
+          advanceTab();
+          return 0;
+        }
+        return p + STEP;
+      });
+    }, TICK_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [paused, activeTab, advanceTab]);
+
+  const handleTabClick = (value: string) => {
+    setActiveTab(value);
+    setProgress(0);
+  };
   return (
     <section className="py-20">
       <div className="max-w-6xl mx-auto px-4">
@@ -49,9 +85,13 @@ export default function AppDemo() {
           </div>
 
           {/* Content */}
-          <div className="p-4 md:p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+          <div
+            className="p-4 md:p-6"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+          >
+            <Tabs value={activeTab} onValueChange={handleTabClick}>
+              <TabsList className="grid w-full grid-cols-3 mb-1">
                 <TabsTrigger value="params" className="text-xs md:text-sm">
                   1. Vaga
                 </TabsTrigger>
@@ -62,6 +102,7 @@ export default function AppDemo() {
                   3. Resultado
                 </TabsTrigger>
               </TabsList>
+              <Progress value={progress} className="h-1 mb-5 [&>div]:transition-none" />
 
               <TabsContent value="params" className="animate-fade-in">
                 <MockParams />
