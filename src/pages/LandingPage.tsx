@@ -14,6 +14,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
+import AppDemo from "@/components/landing/AppDemo";
+import StatsSection from "@/components/landing/StatsSection";
+import FAQSection from "@/components/landing/FAQSection";
+import CTASection from "@/components/landing/CTASection";
 
 const benefits = [
   {
@@ -39,30 +43,10 @@ const benefits = [
 ];
 
 const steps = [
-  {
-    icon: Upload,
-    step: "01",
-    title: "Defina a Vaga",
-    description: "Configure o cargo, requisitos, experiência e habilidades necessárias.",
-  },
-  {
-    icon: FileText,
-    step: "02",
-    title: "Envie o Currículo",
-    description: "Faça upload do PDF ou DOCX do candidato.",
-  },
-  {
-    icon: Brain,
-    step: "03",
-    title: "IA Analisa",
-    description: "Nossa IA compara o currículo com os requisitos da vaga em segundos.",
-  },
-  {
-    icon: TrendingUp,
-    step: "04",
-    title: "Resultado Completo",
-    description: "Receba score, habilidades compatíveis, lacunas e recomendação final.",
-  },
+  { icon: Upload, step: "01", title: "Defina a Vaga", description: "Configure o cargo, requisitos, experiência e habilidades necessárias." },
+  { icon: FileText, step: "02", title: "Envie o Currículo", description: "Faça upload do PDF ou DOCX do candidato." },
+  { icon: Brain, step: "03", title: "IA Analisa", description: "Nossa IA compara o currículo com os requisitos da vaga em segundos." },
+  { icon: TrendingUp, step: "04", title: "Resultado Completo", description: "Receba score, habilidades compatíveis, lacunas e recomendação final." },
 ];
 
 const plans = [
@@ -111,10 +95,19 @@ export default function LandingPage() {
             Análise de Currículos com{" "}
             <span className="text-primary">Inteligência Artificial</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Encontre o candidato ideal em segundos. Nossa IA compara currículos com os requisitos da vaga
             e entrega um score de compatibilidade objetivo e detalhado.
           </p>
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {["IA de última geração", "Resultado em segundos", "100% imparcial"].map((b) => (
+              <span key={b} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full border border-border">
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                {b}
+              </span>
+            ))}
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register">
               <Button size="lg" className="gap-2 text-base px-8">
@@ -132,6 +125,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Stats */}
+      <StatsSection />
+
       {/* Benefits */}
       <section className="py-20 bg-card/50">
         <div className="max-w-6xl mx-auto px-4">
@@ -145,7 +141,7 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((b) => (
-              <Card key={b.title} className="border-border/50 hover:border-primary/30 transition-colors">
+              <Card key={b.title} className="border-border/50 hover:border-primary/30 hover-scale transition-all">
                 <CardContent className="pt-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <b.icon className="w-6 h-6 text-primary" />
@@ -159,8 +155,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* App Demo */}
+      <AppDemo />
+
       {/* How it works */}
-      <section className="py-20">
+      <section className="py-20 bg-card/50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
@@ -186,7 +185,7 @@ export default function LandingPage() {
       </section>
 
       {/* Plans preview */}
-      <section className="py-20 bg-card/50">
+      <section className="py-20">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-14">
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
@@ -200,7 +199,7 @@ export default function LandingPage() {
             {plans.map((p) => (
               <Card
                 key={p.name}
-                className={`text-center ${p.highlight ? "border-primary ring-2 ring-primary/20" : "border-border/50"}`}
+                className={`text-center hover-scale transition-all ${p.highlight ? "border-primary ring-2 ring-primary/20" : "border-border/50"}`}
               >
                 <CardContent className="pt-6">
                   {p.highlight && (
@@ -219,16 +218,14 @@ export default function LandingPage() {
               </Card>
             ))}
           </div>
-          <div className="text-center mt-10">
-            <Link to="/register">
-              <Button size="lg" className="gap-2">
-                Criar Conta Grátis
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
+
+      {/* FAQ */}
+      <FAQSection />
+
+      {/* Final CTA */}
+      <CTASection />
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
