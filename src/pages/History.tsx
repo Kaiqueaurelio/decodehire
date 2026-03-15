@@ -31,7 +31,7 @@ import {
   Search, Heart, ArrowUpDown, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { exportAnalysisPdf } from "@/lib/exportPdf";
+import { exportAnalysisPdf, exportComparisonPdf } from "@/lib/exportPdf";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Legend,
@@ -207,7 +207,7 @@ function DetailDialog({ item, open, onClose }: { item: HistoryItem | null; open:
 }
 
 // ─── Comparison Dialog ───
-function ComparisonDialog({ items, open, onClose }: { items: HistoryItem[]; open: boolean; onClose: () => void }) {
+function ComparisonDialog({ items, open, onClose, canExport }: { items: HistoryItem[]; open: boolean; onClose: () => void; canExport: boolean }) {
   if (items.length < 2) return null;
   const metrics = Object.keys(getRadarMetrics(items[0].result));
   const radarData = metrics.map((metric) => {
@@ -221,6 +221,21 @@ function ComparisonDialog({ items, open, onClose }: { items: HistoryItem[]; open
   });
   const candidateKeys = Object.keys(radarData[0]).filter((k) => k !== "metric");
 
+  // Best candidate
+  const bestIdx = items.reduce((best, item, i) => (item.score > items[best].score ? i : best), 0);
+  const bestJp = items[bestIdx].job_parameters as any;
+
+  const handleExportComparison = () => {
+    if (!canExport) {
+      toast.error("Exportação disponível nos planos Pro e Business.");
+      return;
+    }
+    exportComparisonPdf(
+      items.map((item) => ({ result: item.result as any, jobParams: item.job_parameters as any }))
+    );
+    toast.success("PDF de comparação exportado!");
+  };
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -233,6 +248,21 @@ function ComparisonDialog({ items, open, onClose }: { items: HistoryItem[]; open
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-6 pb-4">
+            {/* Best candidate badge */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <span className="text-xl">🏆</span>
+              <div>
+                <p className="text-sm font-display font-semibold text-primary">Melhor Candidato</p>
+                <p className="text-xs text-muted-foreground">{bestJp?.cargo || `Candidato ${bestIdx + 1}`} — Score: {items[bestIdx].score}/100</p>
+              </div>
+              <div className="ml-auto">
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleExportComparison}>
+                  {canExport ? <Download className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  Exportar PDF
+                </Button>
+              </div>
+            </div>
+
             <Card>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
@@ -248,17 +278,74 @@ function ComparisonDialog({ items, open, onClose }: { items: HistoryItem[]; open
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+
+            {/* Side-by-side skills & gaps table */}
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-sm font-display font-semibold mb-3">Habilidades vs Lacunas</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 font-medium text-muted-foreground">Candidato</th>
+                        <th className="text-center py-2 px-2 font-medium text-muted-foreground">Score</th>
+                        <th className="text-left py-2 px-2 font-medium text-muted-foreground">Habilidades</th>
+                        <th className="text-left py-2 px-2 font-medium text-muted-foreground">Lacunas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item, i) => {
+                        const r = item.result as any;
+                        const jp = item.job_parameters as any;
+                        const isBest = i === bestIdx;
+                        return (
+                          <tr key={item.id} className={`border-b border-border/50 ${isBest ? "bg-primary/5" : ""}`}>
+                            <td className="py-2 px-2 font-medium" style={{ color: RADAR_COLORS[i % RADAR_COLORS.length] }}>
+                              {isBest && "🏆 "}{jp?.cargo || `Candidato ${i + 1}`}
+                            </td>
+                            <td className="py-2 px-2 text-center font-bold">{item.score}</td>
+                            <td className="py-2 px-2">
+                              <div className="flex flex-wrap gap-1">
+                                {(r?.habilidades_compativeis || []).slice(0, 4).map((h: string, j: number) => (
+                                  <Badge key={j} variant="secondary" className="text-[9px]">{h}</Badge>
+                                ))}
+                                {(r?.habilidades_compativeis?.length || 0) > 4 && (
+                                  <Badge variant="outline" className="text-[9px]">+{r.habilidades_compativeis.length - 4}</Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2 px-2 text-destructive">
+                              {(r?.lacunas || []).slice(0, 2).map((l: string, j: number) => (
+                                <div key={j} className="flex items-start gap-1 mb-0.5">
+                                  <XCircle className="w-3 h-3 mt-0.5 shrink-0" /><span>{l}</span>
+                                </div>
+                              ))}
+                              {(r?.lacunas?.length || 0) > 2 && <span className="text-muted-foreground">+{r.lacunas.length - 2} mais</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {items.map((item, i) => {
                 const r = item.result as any;
                 const jp = item.job_parameters as any;
                 const isCompatible = r?.classificacao?.toLowerCase().includes("compatível") && !r?.classificacao?.toLowerCase().includes("não");
                 const scoreColor = item.score >= 70 ? "text-[hsl(160,60%,45%)]" : item.score >= 40 ? "text-[hsl(40,90%,50%)]" : "text-destructive";
+                const isBest = i === bestIdx;
                 return (
-                  <Card key={item.id} className="border-l-4" style={{ borderLeftColor: RADAR_COLORS[i % RADAR_COLORS.length] }}>
+                  <Card key={item.id} className={`border-l-4 ${isBest ? "ring-2 ring-primary/30" : ""}`} style={{ borderLeftColor: RADAR_COLORS[i % RADAR_COLORS.length] }}>
                     <CardContent className="pt-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className="font-display font-semibold text-sm">{jp?.cargo || "Candidato"}</p>
+                        <p className="font-display font-semibold text-sm flex items-center gap-1">
+                          {isBest && <span className="text-sm">🏆</span>}
+                          {jp?.cargo || "Candidato"}
+                        </p>
                         <span className={`text-2xl font-display font-bold ${scoreColor}`}>{item.score}<span className="text-xs text-muted-foreground">/100</span></span>
                       </div>
                       <Badge variant={isCompatible ? "default" : "destructive"} className="text-xs">{r?.classificacao}</Badge>
@@ -637,7 +724,7 @@ export default function History() {
       )}
 
       <DetailDialog item={previewItem} open={!!previewItem} onClose={() => setPreviewItem(null)} />
-      <ComparisonDialog items={comparedItems} open={compareOpen} onClose={() => setCompareOpen(false)} />
+      <ComparisonDialog items={comparedItems} open={compareOpen} onClose={() => setCompareOpen(false)} canExport={canExport} />
 
       {/* Delete single */}
       <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

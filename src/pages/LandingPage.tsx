@@ -16,6 +16,7 @@ import {
 import logo from "@/assets/logo.jpeg";
 import AppDemo from "@/components/landing/AppDemo";
 import StatsSection from "@/components/landing/StatsSection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import CTASection from "@/components/landing/CTASection";
 
@@ -127,6 +128,9 @@ export default function LandingPage() {
 
       {/* Stats */}
       <StatsSection />
+
+      {/* Testimonials */}
+      <TestimonialsSection />
 
       {/* Benefits */}
       <section className="py-20 bg-card/50">
