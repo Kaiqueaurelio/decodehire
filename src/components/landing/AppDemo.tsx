@@ -105,15 +105,25 @@ export default function AppDemo() {
               </TabsList>
               <Progress value={progress} className="h-1 mb-5 [&>div]:transition-none" />
 
-              <TabsContent value="params" className="animate-fade-in">
-                <MockParams />
-              </TabsContent>
-              <TabsContent value="upload" className="animate-fade-in">
-                <MockUpload />
-              </TabsContent>
-              <TabsContent value="result" className="animate-fade-in">
-                <MockResult />
-              </TabsContent>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <TabsContent value="params" forceMount={activeTab === "params" ? true : undefined} className={activeTab !== "params" ? "hidden" : ""}>
+                    <MockParams />
+                  </TabsContent>
+                  <TabsContent value="upload" forceMount={activeTab === "upload" ? true : undefined} className={activeTab !== "upload" ? "hidden" : ""}>
+                    <MockUpload />
+                  </TabsContent>
+                  <TabsContent value="result" forceMount={activeTab === "result" ? true : undefined} className={activeTab !== "result" ? "hidden" : ""}>
+                    <MockResult />
+                  </TabsContent>
+                </motion.div>
+              </AnimatePresence>
             </Tabs>
           </div>
         </div>
