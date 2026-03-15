@@ -724,7 +724,7 @@ export default function History() {
       )}
 
       <DetailDialog item={previewItem} open={!!previewItem} onClose={() => setPreviewItem(null)} />
-      <ComparisonDialog items={comparedItems} open={compareOpen} onClose={() => setCompareOpen(false)} />
+      <ComparisonDialog items={comparedItems} open={compareOpen} onClose={() => setCompareOpen(false)} canExport={canExport} />
 
       {/* Delete single */}
       <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
