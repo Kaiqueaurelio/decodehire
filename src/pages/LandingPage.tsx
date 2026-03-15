@@ -129,6 +129,9 @@ export default function LandingPage() {
       {/* Stats */}
       <StatsSection />
 
+      {/* Testimonials */}
+      <TestimonialsSection />
+
       {/* Benefits */}
       <section className="py-20 bg-card/50">
         <div className="max-w-6xl mx-auto px-4">
