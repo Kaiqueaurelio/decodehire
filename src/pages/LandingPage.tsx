@@ -132,41 +132,54 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Stats */}
-      <StatsSection />
+      <ScrollReveal>
+        <StatsSection />
+      </ScrollReveal>
 
-      {/* Testimonials */}
-      <TestimonialsSection />
+      <ScrollReveal>
+        <TestimonialsSection />
+      </ScrollReveal>
 
       {/* Benefits */}
-      <section className="py-20 bg-card/50">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Por que usar o Decode Analytics?
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Transforme seu processo seletivo com análises inteligentes e imparciais.
-            </p>
+      <ScrollReveal>
+        <section className="py-20 bg-card/50">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="text-center mb-14">
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+                Por que usar o Decode Analytics?
+              </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Transforme seu processo seletivo com análises inteligentes e imparciais.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {benefits.map((b, i) => (
+                <motion.div
+                  key={b.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <Card className="border-border/50 hover:border-primary/30 hover-scale transition-all h-full">
+                    <CardContent className="pt-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <b.icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <h3 className="font-display font-semibold text-lg mb-2">{b.title}</h3>
+                      <p className="text-sm text-muted-foreground">{b.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {benefits.map((b) => (
-              <Card key={b.title} className="border-border/50 hover:border-primary/30 hover-scale transition-all">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <b.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-display font-semibold text-lg mb-2">{b.title}</h3>
-                  <p className="text-sm text-muted-foreground">{b.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
-      {/* App Demo */}
-      <AppDemo />
+      <ScrollReveal>
+        <AppDemo />
+      </ScrollReveal>
 
       {/* How it works */}
       <section className="py-20 bg-card/50">
