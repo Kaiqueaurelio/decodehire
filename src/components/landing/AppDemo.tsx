@@ -113,15 +113,9 @@ export default function AppDemo() {
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <TabsContent value="params" forceMount={activeTab === "params" ? true : undefined} className={activeTab !== "params" ? "hidden" : ""}>
-                    <MockParams />
-                  </TabsContent>
-                  <TabsContent value="upload" forceMount={activeTab === "upload" ? true : undefined} className={activeTab !== "upload" ? "hidden" : ""}>
-                    <MockUpload />
-                  </TabsContent>
-                  <TabsContent value="result" forceMount={activeTab === "result" ? true : undefined} className={activeTab !== "result" ? "hidden" : ""}>
-                    <MockResult />
-                  </TabsContent>
+                  {activeTab === "params" && <MockParams />}
+                  {activeTab === "upload" && <MockUpload />}
+                  {activeTab === "result" && <MockResult />}
                 </motion.div>
               </AnimatePresence>
             </Tabs>
