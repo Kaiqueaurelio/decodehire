@@ -31,7 +31,7 @@ import {
   Search, Heart, ArrowUpDown, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { exportAnalysisPdf } from "@/lib/exportPdf";
+import { exportAnalysisPdf, exportComparisonPdf } from "@/lib/exportPdf";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Legend,
