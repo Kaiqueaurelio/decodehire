@@ -89,7 +89,12 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="max-w-6xl mx-auto px-4 py-20 md:py-32 text-center relative">
+        <motion.div
+          className="max-w-6xl mx-auto px-4 py-20 md:py-32 text-center relative"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+        >
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full mb-6">
             <Zap className="w-4 h-4" />
             Powered by AI
@@ -102,7 +107,6 @@ export default function LandingPage() {
             Encontre o candidato ideal em segundos. Nossa IA compara currículos com os requisitos da vaga
             e entrega um score de compatibilidade objetivo e detalhado.
           </p>
-          {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             {["IA de última geração", "Resultado em segundos", "100% imparcial"].map((b) => (
               <span key={b} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full border border-border">
@@ -125,7 +129,7 @@ export default function LandingPage() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground mt-4">5 análises grátis por dia • Sem cartão de crédito</p>
-        </div>
+        </motion.div>
       </section>
 
       {/* Stats */}
