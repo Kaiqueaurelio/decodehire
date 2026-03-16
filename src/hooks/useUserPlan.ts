@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPlanTypeByProductId } from "@/lib/stripe";
 
 interface UserPlanInfo {
   planName: string;
   planType: "free" | "starter" | "pro" | "business";
-  dailyLimit: number | null; // null = unlimited
+  dailyLimit: number | null;
   dailyUsage: number;
   canAnalyze: boolean;
   canExport: boolean;
   loading: boolean;
+  subscriptionEnd: string | null;
+  isStripeSubscription: boolean;
   refresh: () => Promise<void>;
 }
 
@@ -20,6 +23,8 @@ export function useUserPlan(): UserPlanInfo {
   const [dailyLimit, setDailyLimit] = useState<number | null>(5);
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [isStripeSubscription, setIsStripeSubscription] = useState(false);
 
   const fetchPlanInfo = async (signal?: AbortSignal) => {
     if (!user) {
@@ -37,6 +42,45 @@ export function useUserPlan(): UserPlanInfo {
     }
 
     try {
+      // Check Stripe subscription first
+      const { data: stripeData } = await supabase.functions.invoke("check-subscription");
+      if (signal?.aborted) return;
+
+      if (stripeData?.subscribed && stripeData?.product_id) {
+        const stripePlanType = getPlanTypeByProductId(stripeData.product_id);
+        if (stripePlanType) {
+          // Fetch the matching plan details from DB
+          const { data: dbPlan } = await supabase
+            .from("subscription_plans")
+            .select("name, daily_limit")
+            .eq("plan_type", stripePlanType)
+            .eq("is_active", true)
+            .limit(1)
+            .maybeSingle();
+
+          if (signal?.aborted) return;
+
+          if (dbPlan) {
+            setPlanName(dbPlan.name);
+            setPlanType(stripePlanType);
+            setDailyLimit(dbPlan.daily_limit);
+            setSubscriptionEnd(stripeData.subscription_end);
+            setIsStripeSubscription(true);
+
+            // Still fetch daily usage
+            const { data: usageData } = await supabase.rpc("get_daily_usage", { _user_id: user.id });
+            if (signal?.aborted) return;
+            setDailyUsage(typeof usageData === "number" ? usageData : 0);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // Fallback: check Supabase subscription (Pix-based)
+      setIsStripeSubscription(false);
+      setSubscriptionEnd(null);
+
       const { data: sub } = await supabase
         .from("user_subscriptions")
         .select("plan_id, status")
@@ -80,12 +124,8 @@ export function useUserPlan(): UserPlanInfo {
         setPlanType("free");
       }
 
-      const { data: usageData } = await supabase.rpc("get_daily_usage", {
-        _user_id: user.id,
-      });
-
+      const { data: usageData } = await supabase.rpc("get_daily_usage", { _user_id: user.id });
       if (signal?.aborted) return;
-
       setDailyUsage(typeof usageData === "number" ? usageData : 0);
     } catch (err) {
       if (signal?.aborted) return;
@@ -112,6 +152,8 @@ export function useUserPlan(): UserPlanInfo {
     canAnalyze,
     canExport,
     loading,
+    subscriptionEnd,
+    isStripeSubscription,
     refresh: fetchPlanInfo,
   };
 }
