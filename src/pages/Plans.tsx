@@ -154,13 +154,19 @@ export default function Plans() {
 
               <CardFooter className="pt-4">
                 {isCurrent ? (
-                  <Button variant="outline" className="w-full" disabled>
-                    Plano Atual
-                  </Button>
+                  isStripeSubscription ? (
+                    <Button variant="outline" className="w-full" onClick={handleManageSubscription} disabled={portalLoading}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      {portalLoading ? "Abrindo..." : "Gerenciar Assinatura"}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" disabled>
+                      Plano Atual
+                    </Button>
+                  )
                 ) : isUpgrade(plan.plan_type) ? (
                   <Button
                     className="w-full"
-                    variant={isPro ? "default" : "default"}
                     onClick={() => navigate(`/checkout/${plan.id}`)}
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
