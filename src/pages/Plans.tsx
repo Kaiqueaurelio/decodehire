@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Crown, Zap, Sparkles, Rocket, Shield } from "lucide-react";
+import { Check, CreditCard, Crown, Zap, Sparkles, Rocket, Shield, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Plan {
