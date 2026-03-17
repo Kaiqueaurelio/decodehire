@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { JobParametersForm, type JobParameters } from "@/components/dashboard/JobParametersForm";
 import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
 import { AnalysisResults, type AnalysisResult } from "@/components/dashboard/AnalysisResults";
