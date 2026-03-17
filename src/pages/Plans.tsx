@@ -37,9 +37,23 @@ const planBadges: Record<string, { label: string; variant: "default" | "secondar
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const { planType: currentPlanType, loading: planLoading } = useUserPlan();
+  const { planType: currentPlanType, isStripeSubscription, loading: planLoading } = useUserPlan();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw new Error(error.message);
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error("Erro ao abrir portal: " + (err.message || "Tente novamente"));
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     supabase
