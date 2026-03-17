@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Crown, Zap, Sparkles, Rocket, Shield } from "lucide-react";
+import { Check, CreditCard, Crown, Zap, Sparkles, Rocket, Shield, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Plan {
@@ -36,9 +37,23 @@ const planBadges: Record<string, { label: string; variant: "default" | "secondar
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const { planType: currentPlanType, loading: planLoading } = useUserPlan();
+  const { planType: currentPlanType, isStripeSubscription, loading: planLoading } = useUserPlan();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw new Error(error.message);
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error("Erro ao abrir portal: " + (err.message || "Tente novamente"));
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     supabase
@@ -139,13 +154,19 @@ export default function Plans() {
 
               <CardFooter className="pt-4">
                 {isCurrent ? (
-                  <Button variant="outline" className="w-full" disabled>
-                    Plano Atual
-                  </Button>
+                  isStripeSubscription ? (
+                    <Button variant="outline" className="w-full" onClick={handleManageSubscription} disabled={portalLoading}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      {portalLoading ? "Abrindo..." : "Gerenciar Assinatura"}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" disabled>
+                      Plano Atual
+                    </Button>
+                  )
                 ) : isUpgrade(plan.plan_type) ? (
                   <Button
                     className="w-full"
-                    variant={isPro ? "default" : "default"}
                     onClick={() => navigate(`/checkout/${plan.id}`)}
                   >
                     <CreditCard className="w-4 h-4 mr-2" />

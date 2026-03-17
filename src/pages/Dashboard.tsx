@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { JobParametersForm, type JobParameters } from "@/components/dashboard/JobParametersForm";
 import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
 import { AnalysisResults, type AnalysisResult } from "@/components/dashboard/AnalysisResults";
@@ -23,8 +23,18 @@ import { OnboardingOverlay } from "@/components/dashboard/OnboardingOverlay";
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { dailyLimit, dailyUsage, canAnalyze, loading: planLoading, refresh } = useUserPlan();
   const [jobParams, setJobParams] = useState<JobParameters | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Assinatura realizada com sucesso! Seu plano foi atualizado.");
+      refresh();
+      searchParams.delete("checkout");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const handleSetJobParams = (params: JobParameters) => {
     setJobParams(params);

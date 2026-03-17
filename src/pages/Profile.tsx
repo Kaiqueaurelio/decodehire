@@ -1,53 +1,36 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User, Lock, Mail, CreditCard } from "lucide-react";
+import { User, Lock, Mail, CreditCard, ExternalLink } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
+  const { planName, subscriptionEnd, isStripeSubscription, loading: planLoading } = useUserPlan();
   const [fullName, setFullName] = useState("");
-  const [planName, setPlanName] = useState("Gratuito");
   const [loading, setLoading] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    const fetchProfile = async () => {
-      const [profileRes, subRes] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
-        supabase
-          .from("user_subscriptions")
-          .select("plan_id, subscription_plans(name)")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .maybeSingle(),
-      ]);
-      if (profileRes.data?.full_name) setFullName(profileRes.data.full_name);
-      if (subRes.data) {
-        const plan = subRes.data as any;
-        setPlanName(plan.subscription_plans?.name || "Gratuito");
-      }
-    };
-    fetchProfile();
+    supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      if (data?.full_name) setFullName(data.full_name);
+    });
   }, [user]);
 
   const handleUpdateName = async () => {
     if (!user) return;
     setLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: fullName })
-      .eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").update({ full_name: fullName }).eq("user_id", user.id);
     setLoading(false);
     if (error) {
       toast.error("Erro ao atualizar: " + error.message);
@@ -72,9 +55,23 @@ export default function Profile() {
       toast.error("Erro ao alterar senha: " + error.message);
     } else {
       toast.success("Senha alterada com sucesso!");
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw new Error(error.message);
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao abrir portal: " + (err.message || "Tente novamente"));
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -85,7 +82,6 @@ export default function Profile() {
         <p className="text-muted-foreground text-sm mt-1">Gerencie suas informações pessoais</p>
       </div>
 
-      {/* Info Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -105,15 +101,27 @@ export default function Profile() {
           </div>
           <div className="flex items-center gap-3">
             <Label className="flex items-center gap-2"><CreditCard className="w-4 h-4" /> Plano atual:</Label>
-            <Badge variant="default">{planName}</Badge>
+            <Badge variant="default">{planLoading ? "Carregando..." : planName}</Badge>
           </div>
-          <Button onClick={handleUpdateName} disabled={loading}>
-            {loading ? "Salvando..." : "Salvar alterações"}
-          </Button>
+          {subscriptionEnd && (
+            <p className="text-xs text-muted-foreground">
+              Renovação em: {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleUpdateName} disabled={loading}>
+              {loading ? "Salvando..." : "Salvar alterações"}
+            </Button>
+            {isStripeSubscription && (
+              <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {portalLoading ? "Abrindo..." : "Gerenciar Assinatura"}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Password Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
