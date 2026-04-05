@@ -21,6 +21,7 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import CTASection from "@/components/landing/CTASection";
 import ScrollReveal from "@/components/landing/ScrollReveal";
+import { HeroGeometric } from "@/components/ui/shape-landing-hero";
 
 const benefits = [
   {
@@ -86,50 +87,40 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <motion.div
-          className="max-w-6xl mx-auto px-4 py-20 md:py-32 text-center relative"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-            <Zap className="w-4 h-4" />
-            Powered by AI
-          </div>
-          <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-6 max-w-3xl mx-auto leading-tight">
-            Análise de Currículos com{" "}
-            <span className="text-primary">Inteligência Artificial</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Encontre o candidato ideal em segundos. Nossa IA compara currículos com os requisitos da vaga
-            e entrega um score de compatibilidade objetivo e detalhado.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {["IA de última geração", "Resultado em segundos", "100% imparcial"].map((b) => (
-              <span key={b} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full border border-border">
-                <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                {b}
-              </span>
-            ))}
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" className="gap-2 text-base px-8">
-                Começar Gratuitamente
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button variant="outline" size="lg" className="text-base px-8">
-                Saiba Mais
-              </Button>
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">5 análises grátis por dia • Sem cartão de crédito</p>
-        </motion.div>
+      {/* Hero Geometric */}
+      <section className="relative">
+        <HeroGeometric
+          badge="Powered by AI"
+          title1="Análise de Currículos"
+          title2="com Inteligência Artificial"
+        />
+        {/* CTA overlay on top of hero */}
+        <div className="absolute bottom-12 md:bottom-16 left-0 right-0 z-20">
+          <motion.div
+            className="flex flex-col items-center gap-4 px-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.4 }}
+          >
+            <p className="text-white/50 text-sm md:text-base text-center max-w-xl">
+              Encontre o candidato ideal em segundos. Score de compatibilidade objetivo e detalhado.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/register">
+                <Button size="lg" className="gap-2 text-base px-8">
+                  Começar Gratuitamente
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/about">
+                <Button variant="outline" size="lg" className="text-base px-8 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  Saiba Mais
+                </Button>
+              </Link>
+            </div>
+            <p className="text-white/30 text-xs">5 análises grátis por dia • Sem cartão de crédito</p>
+          </motion.div>
+        </div>
       </section>
 
       <ScrollReveal>

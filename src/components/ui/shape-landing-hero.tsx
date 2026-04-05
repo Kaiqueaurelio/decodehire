@@ -82,7 +82,7 @@ function HeroGeometric({
   return (
     <div className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden bg-[#030303]">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(230,70%,50%)]/[0.08] via-transparent to-[hsl(160,60%,45%)]/[0.05] blur-3xl" />
 
       {/* Shapes */}
       <div className="absolute inset-0 overflow-hidden">
@@ -91,7 +91,7 @@ function HeroGeometric({
           width={600}
           height={140}
           rotate={12}
-          gradient="from-indigo-500/[0.15]"
+          gradient="from-[hsl(230,70%,55%)]/[0.15]"
           className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
         />
         <ElegantShape
@@ -99,7 +99,7 @@ function HeroGeometric({
           width={500}
           height={120}
           rotate={-15}
-          gradient="from-rose-500/[0.15]"
+          gradient="from-[hsl(160,60%,45%)]/[0.15]"
           className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
         />
         <ElegantShape
@@ -115,7 +115,7 @@ function HeroGeometric({
           width={200}
           height={60}
           rotate={20}
-          gradient="from-amber-500/[0.15]"
+          gradient="from-[hsl(230,70%,65%)]/[0.12]"
           className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
         />
         <ElegantShape
@@ -138,7 +138,7 @@ function HeroGeometric({
             animate="visible"
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] mb-8 md:mb-12"
           >
-            <Circle className="h-2 w-2 fill-rose-500/80" />
+            <Circle className="h-2 w-2 fill-[hsl(230,70%,55%)]" />
             <span className="text-sm text-white/60 tracking-wide">{badge}</span>
           </motion.div>
 
@@ -151,18 +151,12 @@ function HeroGeometric({
               <span
                 className={cn(
                   "bg-clip-text text-transparent bg-gradient-to-r",
-                  "from-indigo-300 via-white/90 to-rose-300"
+                  "from-[hsl(230,70%,70%)] via-white/90 to-[hsl(160,60%,60%)]"
                 )}
               >
                 {title2}
               </span>
             </h1>
-          </motion.div>
-
-          <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
-            <p className="text-base sm:text-lg md:text-xl text-white/40 max-w-xl mx-auto px-4 mt-6">
-              Crafting exceptional digital experiences through innovative design and cutting-edge technology.
-            </p>
           </motion.div>
         </div>
       </div>
