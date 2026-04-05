@@ -1,73 +1,137 @@
-# Welcome to your Lovable project
+# DecodeHire
 
-## Project info
+DecodeHire is a modern recruitment and candidate management platform designed to streamline hiring workflows and improve candidate evaluation.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+The project focuses on **performance, scalability, and a clean user experience**, using a modern frontend stack built with React and TypeScript.
 
-## How can I edit this code?
+🌐 **Live Application**
+[https://decodehire.vercel.app/](https://decodehire.vercel.app/)
 
-There are several ways of editing your application.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+# 🚀 Overview
 
-Changes made via Lovable will be committed automatically to this repo.
+DecodeHire provides a modern interface for managing hiring pipelines and organizing candidate information efficiently.
 
-**Use your preferred IDE**
+The application was designed with:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+* scalable architecture
+* modular components
+* optimized performance
+* responsive design
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Follow these steps:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 🛠 Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+This project was built using modern frontend technologies:
 
-# Step 3: Install the necessary dependencies.
-npm i
+* **React** – User interface development
+* **TypeScript** – Static typing for maintainable code
+* **Vite** – Fast development and build tooling
+* **Tailwind CSS** – Utility-first CSS framework
+* **shadcn/ui** – Modern component system
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+
+
+# 📦 Features
+
+* Modern responsive UI
+* Modular architecture
+* Reusable components
+* Fast development environment
+* Production optimized build
+
+
+
+# 📁 Project Structure
+
+```
+src
+│
+├── components
+│
+├── pages
+│
+├── hooks
+│
+├── services
+│
+├── utils
+│
+├── styles
+│
+└── assets
+```
+
+This structure allows the project to remain **organized, scalable, and easy to maintain**.
+
+
+
+# ⚡ Getting Started
+
+Follow the steps below to run the project locally.
+
+### 1. Clone the repository
+
+```bash
+git clone <YOUR_REPOSITORY_URL>
+```
+
+### 2. Enter the project folder
+
+```bash
+cd decodehire
+```
+
+### 3. Install dependencies
+
+```bash
+npm install
+```
+
+### 4. Run the development server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The development server will start at:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+http://localhost:5173
+```
 
-**Use GitHub Codespaces**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+# 🏗 Production Build
 
-This project is built with:
+To generate an optimized build:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+npm run build
+```
 
-## How can I deploy this project?
+The compiled files will be available in:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```
+dist/
+```
 
-## Can I connect a custom domain to my Lovable project?
 
-Yes, you can!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# 🌍 Deployment
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The application can be deployed on modern hosting platforms such as:
+
+* Vercel
+* Netlify
+* Cloudflare Pages
+* AWS
+* DigitalOcean
+
+
+
+# 📄 License
+
+This project is available for educational and development purposes.
