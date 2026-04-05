@@ -10,6 +10,14 @@ interface Message {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
+const quickSuggestions = [
+  "Como fazer upload?",
+  "Quais são os planos?",
+  "Como funciona a análise?",
+  "Análise em lote",
+  "Exportar PDF",
+];
+
 export default function SupportChat({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Olá! 👋 Sou o assistente do **Decode Analytics**. Como posso ajudar?" },
