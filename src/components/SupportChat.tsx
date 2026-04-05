@@ -10,6 +10,14 @@ interface Message {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
+const quickSuggestions = [
+  "Como fazer upload?",
+  "Quais são os planos?",
+  "Como funciona a análise?",
+  "Análise em lote",
+  "Exportar PDF",
+];
+
 export default function SupportChat({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Olá! 👋 Sou o assistente do **Decode Analytics**. Como posso ajudar?" },
@@ -189,6 +197,22 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
             )}
           </div>
         ))}
+
+        {/* Quick suggestion chips */}
+        {messages.length === 1 && !loading && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {quickSuggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => setInput(s)}
+                className="text-xs bg-primary/10 text-primary hover:bg-primary/20 rounded-full px-3 py-1.5 transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading && !messages.some((m, i) => m.role === "assistant" && i === messages.length - 1 && m.content) && (
           <div className="flex gap-2 items-center">
             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
