@@ -1,21 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders, jsonResponse, requireUser, sanitizeText } from "../_shared/security.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireUser(req);
+  if (auth instanceof Response) return auth;
+
   try {
-    const { cargo, formacao, experienciaMinima, certificacoes, idiomas } = await req.json();
-    if (!cargo) {
-      return new Response(JSON.stringify({ error: "Informe o cargo" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
+    const cargo = sanitizeText(body.cargo, 160);
+    const formacao = sanitizeText(body.formacao, 1000);
+    const experienciaMinima = Number(body.experienciaMinima || 0);
+    const certificacoes = sanitizeText(body.certificacoes, 1000);
+    const idiomas = sanitizeText(body.idiomas, 1000);
+
+    if (!cargo) return jsonResponse({ error: "Informe o cargo" }, 400);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -37,10 +37,7 @@ Escreva em português brasileiro, tom profissional. Retorne apenas o texto da de
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
@@ -51,30 +48,16 @@ Escreva em português brasileiro, tom profissional. Retorne apenas o texto da de
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return jsonResponse({ error: "Muitas requisições. Tente novamente." }, 429);
+      if (response.status === 402) return jsonResponse({ error: "Créditos insuficientes." }, 402);
       throw new Error("Erro ao gerar descrição");
     }
 
     const data = await response.json();
     const description = data.choices?.[0]?.message?.content || "";
-
-    return new Response(JSON.stringify({ description }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ description });
   } catch (e) {
     console.error("generate-job-description error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: e instanceof Error ? e.message : "Erro desconhecido" }, 500);
   }
 });
