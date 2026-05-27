@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -13,6 +14,8 @@ import {
   Menu,
   X,
   MessageSquare,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 const adminItems = [
@@ -26,6 +29,7 @@ const adminItems = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -36,8 +40,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Admin Sidebar */}
+    <div className="flex min-h-screen bg-background text-foreground">
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -59,7 +62,7 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <p className="text-xs uppercase tracking-wider text-sidebar-foreground/50 mb-3 px-3">
             Gerenciamento
           </p>
@@ -81,6 +84,14 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border space-y-1">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+            {theme === "dark" ? "Modo claro" : "Modo noturno"}
+          </Button>
           <Link
             to="/dashboard"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
@@ -102,7 +113,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-foreground/20 z-40 lg:hidden"
@@ -110,7 +120,6 @@ export default function AdminLayout() {
         />
       )}
 
-      {/* Main content */}
       <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
           <Button
@@ -121,7 +130,9 @@ export default function AdminLayout() {
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
           <span className="font-display font-bold text-sm">Administração</span>
-          <div className="w-10" />
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
         </header>
 
         <main className="flex-1 p-4 md:p-8">
