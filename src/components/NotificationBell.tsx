@@ -40,22 +40,14 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-
     if (!user) return;
 
     const channel = supabase
-      .channel("user-notifications")
+      .channel(`user-notifications:${user.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-        }
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => setNotifications((prev) => [payload.new as Notification, ...prev])
       )
       .subscribe();
 
@@ -108,24 +100,14 @@ export default function NotificationBell() {
         </div>
         <ScrollArea className="max-h-72">
           {notifications.length === 0 ? (
-            <p className="text-center text-muted-foreground text-sm py-8">
-              Nenhuma notificação
-            </p>
+            <p className="text-center text-muted-foreground text-sm py-8">Nenhuma notificação</p>
           ) : (
             <div className="divide-y divide-border">
               {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    "px-4 py-3 text-sm transition-colors",
-                    !n.is_read && "bg-accent/30"
-                  )}
-                >
+                <div key={n.id} className={cn("px-4 py-3 text-sm transition-colors", !n.is_read && "bg-accent/30")}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium text-foreground">{n.title}</p>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
-                      {timeAgo(n.created_at)}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">{timeAgo(n.created_at)}</span>
                   </div>
                   <p className="text-muted-foreground text-xs mt-0.5">{n.message}</p>
                 </div>
