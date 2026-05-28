@@ -1,1 +1,0 @@
-ALTER TYPE public.plan_type ADD VALUE IF NOT EXISTS 'starter';

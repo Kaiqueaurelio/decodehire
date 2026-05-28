@@ -1,0 +1,2 @@
+import Link from "next/link";import type {ReactNode} from "react";
+export default function AppLayout({children}:{children:ReactNode}){return <div className="shell"><aside className="side"><b>DecodeHire</b><nav className="nav"><Link href="/dashboard">Dashboard</Link><Link href="/history">Historico</Link><Link href="/plans">Planos</Link><Link href="/profile">Perfil</Link><Link href="/admin">Admin</Link></nav></aside><main className="main">{children}</main></div>}

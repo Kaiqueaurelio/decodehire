@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function Home(){return <main className="main" style={{maxWidth:980,margin:"0 auto"}}><h1 style={{fontSize:56}}>DecodeHire</h1><p style={{fontSize:20,color:"var(--muted)",lineHeight:1.6}}>Analise curriculos, compare candidatos, gerencie planos e acompanhe operacao em uma aplicacao Next.js independente.</p><div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:28}}><Link className="btn" href="/dashboard">Abrir app</Link><Link className="btn secondary" href="/login">Entrar</Link></div></main>}
